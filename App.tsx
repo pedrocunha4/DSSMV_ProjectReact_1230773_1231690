@@ -24,7 +24,7 @@ function AppNavigator() {
             <Stack.Screen
               name="Dashboard"
               component={DashboardScreen}
-              options={{ title: 'Menu Principal' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Plans"

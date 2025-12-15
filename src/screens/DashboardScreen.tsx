@@ -8,8 +8,7 @@ import { RootState } from '../store/store';
 export default function DashboardScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<any>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const username = user?.username || 'utilizador';
+  const { username } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -17,9 +16,9 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header Azul */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>PP Workout</Text>
+      {/* Título Centralizado */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>PP Workout</Text>
       </View>
 
       {/* Conteúdo Principal */}
@@ -74,17 +73,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  header: {
-    backgroundColor: '#007AFF',
-    paddingTop: 15,
+  titleContainer: {
+    paddingTop: 24,
     paddingBottom: 20,
-    paddingHorizontal: 20,
-    elevation: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+  title: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    letterSpacing: 1.5,
   },
   content: {
     flex: 1,
@@ -93,23 +92,27 @@ const styles = StyleSheet.create({
   welcomeCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 24,
+    padding: 28,
     marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: '#1A1A1A',
     marginBottom: 8,
+    textAlign: 'center',
   },
   welcomeSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#666666',
+    textAlign: 'center',
   },
   optionCard: {
     backgroundColor: '#FFFFFF',
@@ -129,9 +132,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF3E0',
   },
   iconEmoji: {
-    fontSize: 32,
+    fontSize: 42,
   },
   optionText: {
     fontSize: 20,
