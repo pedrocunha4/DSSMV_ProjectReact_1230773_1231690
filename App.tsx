@@ -5,8 +5,8 @@ import { Provider, useSelector } from 'react-redux';
 import { store, RootState } from './src/store/store';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
-import ExercisesScreen from './src/screens/ExercisesScreen';
 import PlansScreen from './src/screens/PlansScreen';
+import PlanCreateScreen from './src/screens/PlanCreateScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -15,14 +15,26 @@ function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator>
         {!isAuthenticated ? (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         ) : (
           <>
-            <Stack.Screen name="Dashboard" component={DashboardScreen} />
-            <Stack.Screen name="Exercises" component={ExercisesScreen} />
-            <Stack.Screen name="Plans" component={PlansScreen} />
+            <Stack.Screen
+              name="Dashboard"
+              component={DashboardScreen}
+              options={{ title: 'Menu Principal' }}
+            />
+            <Stack.Screen
+              name="Plans"
+              component={PlansScreen}
+              options={{ title: 'Meus Planos' }}
+            />
+            <Stack.Screen
+              name="PlanCreate"
+              component={PlanCreateScreen}
+              options={{ title: 'Novo Plano' }}
+            />
           </>
         )}
       </Stack.Navigator>
