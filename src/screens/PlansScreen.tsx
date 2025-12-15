@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
@@ -17,25 +22,73 @@ export default function PlansScreen() {
     dispatch(fetchPlans());
   }, [dispatch]);
 
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Data não disponível';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-PT', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   const renderItem = ({ item }: any) => (
-    <View style={styles.card}>
-      <Text style={styles.planName}>{item.name || item.comment || 'Sem Nome'}</Text>
-      <Text style={styles.planDesc}>{item.description || 'Sem descrição'}</Text>
-      <Text style={styles.planDate}>{item.creation_date}</Text>
-    </View>
+    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+      <View style={styles.cardContent}>
+        <View style={styles.cardHeader}>
+          <View style={styles.planIcon}>
+            <Text style={styles.planIconText}>📋</Text>
+          </View>
+          <View style={styles.planInfo}>
+            <Text style={styles.planName} numberOfLines={1}>
+              {item.name || item.comment || 'Sem Nome'}
+            </Text>
+            <Text style={styles.planDesc} numberOfLines={2}>
+              {item.description || item.goal || 'Sem descrição'}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.cardFooter}>
+          <Text style={styles.planDate}>{formatDate(item.creation_date)}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
+      {/* Header Azul */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Meus Planos</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* Conteúdo */}
       {status === 'loading' ? (
-        <ActivityIndicator size="large" color="#007AFF" style={{marginTop: 50}} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>A carregar planos...</Text>
+        </View>
       ) : (
         <FlatList
           data={items}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
-          contentContainerStyle={{ paddingBottom: 80 }}
-          ListEmptyComponent={<Text style={styles.empty}>Nenhum plano encontrado.</Text>}
+          keyExtractor={(item) => (item.id ? item.id.toString() : Math.random().toString())}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>📋</Text>
+              <Text style={styles.emptyText}>Nenhum plano encontrado</Text>
+              <Text style={styles.emptySubtext}>Crie o seu primeiro plano de treino!</Text>
+            </View>
+          }
         />
       )}
 
@@ -43,6 +96,7 @@ export default function PlansScreen() {
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('PlanCreate')}
+        activeOpacity={0.8}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
@@ -51,16 +105,150 @@ export default function PlansScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5', padding: 15 },
-  card: { backgroundColor: '#FFF', padding: 15, borderRadius: 10, marginBottom: 10, elevation: 2 },
-  planName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  planDesc: { fontSize: 14, color: '#666', marginVertical: 5 },
-  planDate: { fontSize: 12, color: '#999', textAlign: 'right' },
-  empty: { textAlign: 'center', marginTop: 50, color: '#999' },
-  fab: {
-    position: 'absolute', bottom: 20, right: 20,
-    width: 60, height: 60, borderRadius: 30, backgroundColor: '#007AFF',
-    alignItems: 'center', justifyContent: 'center', elevation: 5
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
   },
-  fabText: { fontSize: 30, color: '#FFF', marginTop: -3 }
+  header: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 45,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    elevation: 4,
+  },
+  backButton: {
+    padding: 8,
+  },
+  backIcon: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666666',
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  cardContent: {
+    padding: 20,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  planIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E3F2FD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  planIconText: {
+    fontSize: 24,
+  },
+  planInfo: {
+    flex: 1,
+  },
+  planName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 6,
+    letterSpacing: 0.3,
+  },
+  planDesc: {
+    fontSize: 14,
+    color: '#666666',
+    lineHeight: 20,
+  },
+  cardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingTop: 12,
+    alignItems: 'flex-end',
+  },
+  planDate: {
+    fontSize: 12,
+    color: '#999999',
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabText: {
+    fontSize: 32,
+    color: '#FFFFFF',
+    fontWeight: '300',
+    marginTop: -2,
+  },
 });

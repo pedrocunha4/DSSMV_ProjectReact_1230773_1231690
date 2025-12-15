@@ -29,12 +29,12 @@ function AppNavigator() {
             <Stack.Screen
               name="Plans"
               component={PlansScreen}
-              options={{ title: 'Meus Planos' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="PlanCreate"
               component={PlanCreateScreen}
-              options={{ title: 'Novo Plano' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Exercises"
