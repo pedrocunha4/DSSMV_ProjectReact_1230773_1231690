@@ -1,139 +1,157 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
-  ActivityIndicator,
   TouchableOpacity,
-  Alert
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import { AppDispatch, RootState } from '../store/store';
-import { fetchPlans } from '../store/plansSlice';
-import { logout } from '../store/authSlice'; // Para o botão de sair
+import { logout } from '../store/authSlice';
 
 export default function DashboardScreen() {
   const dispatch = useDispatch<AppDispatch>();
-
-  // Ler dados do Redux (FLUX: View lê da Store)
-  const { items, status, error } = useSelector((state: RootState) => state.plans);
-  // const { username } = useSelector((state: RootState) => state.auth); // (Opcional se guardares o user)
-
-  // Carregar dados ao iniciar o ecrã (FLUX: View dispara Action)
-  useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchPlans());
-    }
-  }, [status, dispatch]);
+  const navigation = useNavigation<any>();
+  const { username } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
-    dispatch(logout()); // Isto vai fazer o App.tsx mudar automaticamente para o Login
+    dispatch(logout());
   };
-
-  const renderItem = ({ item }: any) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => Alert.alert('Detalhes', `Clicaste no plano: ${item.comment || 'Sem nome'}`)}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.planName}>{item.comment || 'Plano Sem Nome'}</Text>
-        <Text style={styles.planDate}>{item.creation_date}</Text>
-      </View>
-      <Text style={styles.planDescription}>
-        {item.description || 'Sem descrição definida.'}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={styles.container}>
-      {/* Cabeçalho */}
+      {/* Header Azul */}
       <View style={styles.header}>
-        <Text style={styles.title}>Meus Planos</Text>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Sair</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>PP Workout</Text>
       </View>
 
       {/* Conteúdo Principal */}
-      {status === 'loading' ? (
-        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 50 }} />
-      ) : status === 'failed' ? (
-        <View style={styles.center}>
-          <Text style={styles.errorText}>Erro ao carregar planos.</Text>
-          <Text>{String(error)}</Text>
-          <TouchableOpacity onPress={() => dispatch(fetchPlans())} style={styles.retryButton}>
-            <Text style={styles.retryText}>Tentar Novamente</Text>
-          </TouchableOpacity>
+      <View style={styles.content}>
+        {/* Card de Boas-vindas */}
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeTitle}>Olá, {username?.toLowerCase() || 'utilizador'}!</Text>
+          <Text style={styles.welcomeSubtitle}>Escolha uma opção para começar</Text>
         </View>
-      ) : (
-        <FlatList
-          data={items}
-          renderItem={renderItem}
-          keyExtractor={(item: any) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Não tens planos criados ainda.</Text>
-          }
-        />
-      )}
 
-      {/* FAB (Botão Flutuante) para Criar Plano */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => Alert.alert('Novo Plano', 'Aqui abriria o formulário de criar plano.')}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+        {/* Card Planos de Treino */}
+        <TouchableOpacity
+          style={styles.optionCard}
+          onPress={() => navigation.navigate('Plans')}
+        >
+          <View style={styles.iconContainer}>
+            <View style={[styles.iconCircle, styles.iconCirclePlans]}>
+              <Text style={styles.iconEmoji}>📅</Text>
+            </View>
+          </View>
+          <Text style={styles.optionText}>Planos de Treino</Text>
+        </TouchableOpacity>
+
+        {/* Card Exercícios */}
+        <TouchableOpacity
+          style={styles.optionCard}
+          onPress={() => navigation.navigate('Exercises')}
+        >
+          <View style={styles.iconContainer}>
+            <View style={[styles.iconCircle, styles.iconCircleExercises]}>
+              <Text style={styles.iconEmoji}>🏋️</Text>
+            </View>
+          </View>
+          <Text style={styles.optionText}>Exercícios</Text>
+        </TouchableOpacity>
+
+        {/* Botão Sair */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Sair</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#FFF',
-    elevation: 4, // Sombra Android
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
   },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  logoutButton: { padding: 10 },
-  logoutText: { color: 'red', fontWeight: 'bold' },
-
-  listContent: { padding: 15 },
-  card: {
-    backgroundColor: '#FFF',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+  header: {
+    backgroundColor: '#007AFF',
+    paddingTop: 15,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    elevation: 4,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  welcomeCard: {
+    backgroundColor: '#E8E8E8',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+  },
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  optionCard: {
+    backgroundColor: '#E8E8E8',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 16,
+    alignItems: 'center',
     elevation: 2,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  planName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  planDate: { fontSize: 12, color: '#999' },
-  planDescription: { fontSize: 14, color: '#666' },
-
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: 'red', marginBottom: 10 },
-  retryButton: { padding: 10, backgroundColor: '#007AFF', borderRadius: 5 },
-  retryText: { color: '#FFF' },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
-
-  fab: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
+  iconContainer: {
+    marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#007AFF',
-    borderRadius: 30,
-    elevation: 8,
   },
-  fabText: { fontSize: 30, color: '#FFF', marginTop: -2 },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  iconCirclePlans: {
+    backgroundColor: '#ADD8E6', // Azul claro (sky blue)
+  },
+  iconCircleExercises: {
+    backgroundColor: '#FF8C00', // Laranja (dark orange)
+  },
+  iconEmoji: {
+    fontSize: 32,
+  },
+  optionText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  logoutButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 20,
+  },
+  logoutText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

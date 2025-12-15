@@ -20,14 +20,14 @@ const initialState: AuthState = {
 
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
-  async ({ username, password }: any, { rejectWithValue }) => {
+  async ({ username, password }: { username: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await api.post('login/', { username, password });
       const token = response.data.token;
 
       await AsyncStorage.setItem('token', token);
 
-      return token; // O que retornarmos aqui vai para o "payload" de sucesso
+      return { token, username }; // Retornar token e username
     } catch (err: any) {
       return rejectWithValue(err.response?.data || 'Erro ao fazer login');
     }
@@ -50,17 +50,16 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<string>) => {
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<{ token: string; username: string }>) => {
         state.loading = false;
         state.isAuthenticated = true;
-        state.token = action.payload;
+        state.token = action.payload.token;
+        state.username = action.payload.username;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.isAuthenticated = true;
-        state.token = action.payload.token;       // <--- Ajuste aqui
-        state.username = action.payload.username; // <--- Guardar o nome
-      })
+        state.error = action.payload as string || 'Erro ao fazer login';
+      });
   },
 });
 
