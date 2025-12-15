@@ -7,6 +7,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import PlanCreateScreen from './src/screens/PlanCreateScreen';
+import ExercisesScreen from './src/screens/ExercisesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,11 @@ function AppNavigator() {
               name="PlanCreate"
               component={PlanCreateScreen}
               options={{ title: 'Novo Plano' }}
+            />
+            <Stack.Screen
+              name="Exercises"
+              component={ExercisesScreen}
+              options={{ headerShown: false }}
             />
           </>
         )}
