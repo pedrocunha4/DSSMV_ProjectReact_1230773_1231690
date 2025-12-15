@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert
+  View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
@@ -11,7 +11,7 @@ export default function PlansScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
 
-  const { items, status, error } = useSelector((state: RootState) => state.plans);
+  const { items, status } = useSelector((state: RootState) => state.plans);
 
   useEffect(() => {
     dispatch(fetchPlans());

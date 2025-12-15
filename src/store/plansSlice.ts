@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
 
-// 1. Interface do Plano
 export interface Plan {
   id?: number;
   name?: string;
@@ -10,7 +9,7 @@ export interface Plan {
   creation_date?: string;
   start?: string;
   end?: string;
-  is_public?: boolean; // Novo campo para ajudar a filtrar se necessário
+  is_public?: boolean;
 }
 
 interface PlansState {
@@ -20,12 +19,10 @@ interface PlansState {
   createStatus: 'idle' | 'loading' | 'success' | 'failed';
 }
 
-// 2. Buscar Planos (GET) - COM FILTRO
 export const fetchPlans = createAsyncThunk(
   'plans/fetchPlans',
   async (_, { rejectWithValue }) => {
     try {
-      // ADICIONADO: ?is_public=false para trazer apenas os planos privados (os teus)
       const response = await api.get('routine/?is_public=false');
       return response.data.results;
     } catch (err: any) {
@@ -34,7 +31,6 @@ export const fetchPlans = createAsyncThunk(
   }
 );
 
-// 3. Criar Plano (POST)
 export const addPlan = createAsyncThunk(
   'plans/addPlan',
   async (planData: { name: string; description: string }, { rejectWithValue }) => {
@@ -100,7 +96,7 @@ const plansSlice = createSlice({
       })
       .addCase(addPlan.fulfilled, (state, action) => {
         state.createStatus = 'success';
-        state.items.push(action.payload);
+        state.items.unshift(action.payload);
       })
       .addCase(addPlan.rejected, (state, action) => {
         state.createStatus = 'failed';
