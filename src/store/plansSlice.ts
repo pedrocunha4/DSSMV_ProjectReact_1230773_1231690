@@ -1,14 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
 
-// 1. Interface do Plano (Atualizada com os campos corretos)
+// 1. Interface do Plano
 export interface Plan {
   id?: number;
   name?: string;
+  comment?: string;
   description?: string;
   creation_date?: string;
-  start?: string; // Corrigido: era start_date
-  end?: string;   // Corrigido: era end_date
+  start?: string;
+  end?: string;
+  is_public?: boolean; // Novo campo para ajudar a filtrar se necessário
 }
 
 interface PlansState {
@@ -18,12 +20,13 @@ interface PlansState {
   createStatus: 'idle' | 'loading' | 'success' | 'failed';
 }
 
-// 2. Buscar Planos (GET)
+// 2. Buscar Planos (GET) - COM FILTRO
 export const fetchPlans = createAsyncThunk(
   'plans/fetchPlans',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('routine/');
+      // ADICIONADO: ?is_public=false para trazer apenas os planos privados (os teus)
+      const response = await api.get('routine/?is_public=false');
       return response.data.results;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || 'Erro ao carregar planos');
@@ -31,12 +34,11 @@ export const fetchPlans = createAsyncThunk(
   }
 );
 
-// 3. Criar Plano (POST) - AGORA COM OS CAMPOS CERTOS
+// 3. Criar Plano (POST)
 export const addPlan = createAsyncThunk(
   'plans/addPlan',
   async (planData: { name: string; description: string }, { rejectWithValue }) => {
     try {
-      // Datas
       const now = new Date();
       const today = now.toISOString().split('T')[0];
 
@@ -44,15 +46,14 @@ export const addPlan = createAsyncThunk(
       future.setMonth(future.getMonth() + 6);
       const next6Months = future.toISOString().split('T')[0];
 
-      // Payload Exato que a API pediu
       const payload = {
         name: planData.name,
         description: planData.description || '',
-        start: today,       // <--- CORRIGIDO (era start_date)
-        end: next6Months,   // <--- CORRIGIDO (era end_date)
-        fit_in_week: true,  // Adicionado conforme o seu exemplo
+        start: today,
+        end: next6Months,
+        fit_in_week: true,
         is_template: false,
-        is_public: false
+        is_public: false // Garante que o plano criado é privado
       };
 
       console.log("Enviando Payload:", payload);
@@ -61,7 +62,6 @@ export const addPlan = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       console.error("Erro API:", err.response?.data);
-      // Retorna o erro detalhado para vermos o que falta
       return rejectWithValue(err.response?.data || 'Erro ao criar plano');
     }
   }
@@ -85,12 +85,18 @@ const plansSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchPlans.pending, (state) => { state.status = 'loading'; })
       .addCase(fetchPlans.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.items = action.payload;
       })
+      .addCase(fetchPlans.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
       .addCase(addPlan.pending, (state) => {
         state.createStatus = 'loading';
+        state.error = null;
       })
       .addCase(addPlan.fulfilled, (state, action) => {
         state.createStatus = 'success';
