@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Provider, useSelector } from 'react-redux';
-import { store, RootState } from './src/store/store';
+import { store } from './src/store/store';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import PlansScreen from './src/screens/PlansScreen';
@@ -12,7 +12,7 @@ import ExercisesScreen from './src/screens/ExercisesScreen';
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   return (
     <NavigationContainer>
@@ -55,3 +55,4 @@ export default function App() {
     </Provider>
   );
 }
+

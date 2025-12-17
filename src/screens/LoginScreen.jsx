@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store/store';
 import { loginUser } from '../store/authSlice';
 
 export default function LoginScreen() {
@@ -18,8 +17,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (error) {
@@ -179,3 +178,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

@@ -3,12 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { useNavigation } from '@react-navigation/native';
-import { RootState } from '../store/store';
 
 export default function DashboardScreen() {
   const dispatch = useDispatch();
-  const navigation = useNavigation<any>();
-  const { username } = useSelector((state: RootState) => state.auth);
+  const navigation = useNavigation();
+  const { username } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -180,3 +179,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
