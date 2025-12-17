@@ -9,25 +9,22 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { addPlan, resetCreateStatus } from '../store/plansSlice';
-import { AppDispatch, RootState } from '../store/store';
 import { useNavigation } from '@react-navigation/native';
 import PlanNameInput from '../components/plans/PlanNameInput';
 import GoalSelector from '../components/plans/GoalSelector';
 import DaysSelector from '../components/plans/DaysSelector';
 import CreatePlanButton from '../components/plans/CreatePlanButton';
 
-type GoalType = 'Ganhar massa muscular' | 'Perder peso';
-
 export default function PlanCreateScreen() {
   const [name, setName] = useState('');
-  const [goal, setGoal] = useState<GoalType | null>(null);
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [goal, setGoal] = useState(null);
+  const [selectedDays, setSelectedDays] = useState([]);
 
-  const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation<any>();
-  const { createStatus } = useSelector((state: RootState) => state.plans);
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const { createStatus } = useSelector((state) => state.plans);
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day) => {
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
@@ -141,3 +138,4 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 });
+

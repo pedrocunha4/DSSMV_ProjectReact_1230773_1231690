@@ -8,21 +8,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store/store';
 import { fetchPlans } from '../store/plansSlice';
 import { useNavigation } from '@react-navigation/native';
 
 export default function PlansScreen() {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation<any>();
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
 
-  const { items, status } = useSelector((state: RootState) => state.plans);
+  const { items, status } = useSelector((state) => state.plans);
 
   useEffect(() => {
     dispatch(fetchPlans());
   }, [dispatch]);
 
-  const formatDate = (dateString: string | undefined) => {
+  const formatDate = (dateString) => {
     if (!dateString) return 'Data não disponível';
     try {
       const date = new Date(dateString);
@@ -36,7 +35,7 @@ export default function PlansScreen() {
     }
   };
 
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card} activeOpacity={0.8}>
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
@@ -252,3 +251,4 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
 });
+

@@ -1,13 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-interface PlanNameInputProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-}
-
-export default function PlanNameInput({ value, onChangeText, placeholder }: PlanNameInputProps) {
+export default function PlanNameInput({ value, onChangeText, placeholder }) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Nome do Plano</Text>

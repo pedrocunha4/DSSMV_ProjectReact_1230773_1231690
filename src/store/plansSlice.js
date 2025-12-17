@@ -1,31 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
 
-export interface Plan {
-  id?: number;
-  name?: string;
-  comment?: string;
-  description?: string;
-  creation_date?: string;
-  start?: string;
-  end?: string;
-  is_public?: boolean;
-}
-
-interface PlansState {
-  items: Plan[];
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
-  createStatus: 'idle' | 'loading' | 'success' | 'failed';
-}
-
 export const fetchPlans = createAsyncThunk(
   'plans/fetchPlans',
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('routine/?is_public=false');
       return response.data.results;
-    } catch (err: any) {
+    } catch (err) {
       return rejectWithValue(err.response?.data || 'Erro ao carregar planos');
     }
   }
@@ -33,7 +15,7 @@ export const fetchPlans = createAsyncThunk(
 
 export const addPlan = createAsyncThunk(
   'plans/addPlan',
-  async (planData: { name: string; description: string }, { rejectWithValue }) => {
+  async (planData, { rejectWithValue }) => {
     try {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
@@ -49,21 +31,21 @@ export const addPlan = createAsyncThunk(
         end: next6Months,
         fit_in_week: true,
         is_template: false,
-        is_public: false // Garante que o plano criado é privado
+        is_public: false
       };
 
       console.log("Enviando Payload:", payload);
 
       const response = await api.post('routine/', payload);
       return response.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erro API:", err.response?.data);
       return rejectWithValue(err.response?.data || 'Erro ao criar plano');
     }
   }
 );
 
-const initialState: PlansState = {
+const initialState = {
   items: [],
   status: 'idle',
   error: null,
@@ -88,7 +70,7 @@ const plansSlice = createSlice({
       })
       .addCase(fetchPlans.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload as string;
+        state.error = action.payload;
       })
       .addCase(addPlan.pending, (state) => {
         state.createStatus = 'loading';
@@ -109,3 +91,4 @@ const plansSlice = createSlice({
 
 export const { resetCreateStatus } = plansSlice.actions;
 export default plansSlice.reducer;
+

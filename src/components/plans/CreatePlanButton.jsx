@@ -1,13 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
-interface CreatePlanButtonProps {
-  onPress: () => void;
-  disabled: boolean;
-  loading: boolean;
-}
-
-export default function CreatePlanButton({ onPress, disabled, loading }: CreatePlanButtonProps) {
+export default function CreatePlanButton({ onPress, disabled, loading }) {
   return (
     <View style={styles.buttonContainer}>
       <TouchableOpacity

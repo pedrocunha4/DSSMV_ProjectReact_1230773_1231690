@@ -11,12 +11,7 @@ const DAYS_OF_WEEK = [
   'Domingo',
 ];
 
-interface DaysSelectorProps {
-  selectedDays: string[];
-  onToggleDay: (day: string) => void;
-}
-
-export default function DaysSelector({ selectedDays, onToggleDay }: DaysSelectorProps) {
+export default function DaysSelector({ selectedDays, onToggleDay }) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Seleciona os dias</Text>

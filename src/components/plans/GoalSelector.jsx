@@ -1,14 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-type GoalType = 'Ganhar massa muscular' | 'Perder peso';
-
-interface GoalSelectorProps {
-  selectedGoal: GoalType | null;
-  onSelectGoal: (goal: GoalType) => void;
-}
-
-export default function GoalSelector({ selectedGoal, onSelectGoal }: GoalSelectorProps) {
+export default function GoalSelector({ selectedGoal, onSelectGoal }) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>Objetivo</Text>
