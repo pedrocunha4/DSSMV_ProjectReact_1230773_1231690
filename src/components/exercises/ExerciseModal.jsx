@@ -7,16 +7,9 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { Exercise } from '../../store/exercisesSlice';
 import { cleanDescription, getCategoryColor } from '../../utils/exerciseUtils';
 
-interface ExerciseModalProps {
-  exercise: Exercise | null;
-  visible: boolean;
-  onClose: () => void;
-}
-
-export default function ExerciseModal({ exercise, visible, onClose }: ExerciseModalProps) {
+export default function ExerciseModal({ exercise, visible, onClose }) {
   if (!exercise) return null;
 
   const categoryColor = getCategoryColor(exercise.category_name);

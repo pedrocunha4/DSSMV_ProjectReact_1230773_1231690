@@ -9,22 +9,21 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { AppDispatch, RootState } from '../store/store';
-import { fetchExercises, fetchExerciseCategories, Exercise } from '../store/exercisesSlice';
+import { fetchExercises, fetchExerciseCategories } from '../store/exercisesSlice';
 import ExerciseCard from '../components/exercises/ExerciseCard';
 import ExerciseModal from '../components/exercises/ExerciseModal';
 import CategoryDropdown from '../components/exercises/CategoryDropdown';
 import SearchBar from '../components/exercises/SearchBar';
 
 export default function ExercisesScreen() {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation<any>();
-  const { items: exercises, categories, status, error } = useSelector((state: RootState) => state.exercises);
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const { items: exercises, categories, status, error } = useSelector((state) => state.exercises);
 
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState(null);
 
   useEffect(() => {
     dispatch(fetchExercises());
@@ -50,7 +49,7 @@ export default function ExercisesScreen() {
       'Todas as categorias'
     : 'Todas as categorias';
 
-  const renderExercise = ({ item }: { item: Exercise }) => (
+  const renderExercise = ({ item }) => (
     <ExerciseCard
       exercise={item}
       onPress={() => setSelectedExercise(item)}
@@ -138,6 +137,7 @@ export default function ExercisesScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -261,3 +261,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

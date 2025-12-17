@@ -1,13 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-interface SearchBarProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-}
-
-export default function SearchBar({ value, onChangeText, placeholder = 'Pesquisar exercícios...' }: SearchBarProps) {
+export default function SearchBar({ value, onChangeText, placeholder = 'Pesquisar exercícios...' }) {
   return (
     <View style={styles.searchContainer}>
       <Text style={styles.searchIcon}>🔍</Text>

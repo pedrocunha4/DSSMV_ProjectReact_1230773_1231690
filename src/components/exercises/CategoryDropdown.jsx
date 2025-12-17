@@ -1,20 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { ExerciseCategory } from '../../store/exercisesSlice';
-
-interface CategoryDropdownProps {
-  visible: boolean;
-  categories: ExerciseCategory[];
-  onSelectCategory: (categoryId: number | null) => void;
-  onClose: () => void;
-}
 
 export default function CategoryDropdown({
   visible,
   categories,
   onSelectCategory,
   onClose,
-}: CategoryDropdownProps) {
+}) {
   if (!visible) return null;
 
   return (

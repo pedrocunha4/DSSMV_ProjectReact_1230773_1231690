@@ -1,14 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Exercise } from '../../store/exercisesSlice';
 import { getCategoryColor } from '../../utils/exerciseUtils';
 
-interface ExerciseCardProps {
-  exercise: Exercise;
-  onPress: () => void;
-}
-
-export default function ExerciseCard({ exercise, onPress }: ExerciseCardProps) {
+export default function ExerciseCard({ exercise, onPress }) {
   if (!exercise || !exercise.name) return null;
   
   const categoryColor = getCategoryColor(exercise.category_name);
