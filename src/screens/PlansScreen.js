@@ -93,7 +93,7 @@ export default function PlansScreen() {
           </View>
           <View style={styles.planInfo}>
             <Text style={styles.planName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.planDesc} numberOfLines={1}>{item.description}</Text>
+            <Text style={styles.planDesc} numberOfLines={1}>Objetivo: {item.description ? item.description.replace('Objetivo: ', '') : 'Sem objetivo'}</Text>
           </View>
         </View>
 
