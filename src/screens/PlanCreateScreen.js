@@ -12,23 +12,15 @@ import { addPlan, resetCreateStatus } from '../store/plansSlice';
 import { useNavigation } from '@react-navigation/native';
 import PlanNameInput from '../components/plans/PlanNameInput';
 import GoalSelector from '../components/plans/GoalSelector';
-import DaysSelector from '../components/plans/DaysSelector';
 import CreatePlanButton from '../components/plans/CreatePlanButton';
 
 export default function PlanCreateScreen() {
   const [name, setName] = useState('');
   const [goal, setGoal] = useState(null);
-  const [selectedDays, setSelectedDays] = useState([]);
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const { createStatus } = useSelector((state) => state.plans);
-
-  const toggleDay = (day) => {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
-  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -41,12 +33,7 @@ export default function PlanCreateScreen() {
       return;
     }
 
-    if (selectedDays.length === 0) {
-      Alert.alert('Erro', 'Por favor, selecione pelo menos um dia!');
-      return;
-    }
-
-    const description = `Goal: ${goal}\nDias: ${selectedDays.join(', ')}`;
+    const description = goal;
 
     const result = await dispatch(addPlan({ name: name.trim(), description }));
 
@@ -59,7 +46,7 @@ export default function PlanCreateScreen() {
     }
   };
 
-  const isFormValid = name.trim() !== '' && goal !== null && selectedDays.length > 0;
+  const isFormValid = name.trim() !== '' && goal !== null;
   const isDisabled = createStatus === 'loading' || !isFormValid;
 
   return (
@@ -80,7 +67,6 @@ export default function PlanCreateScreen() {
       >
         <PlanNameInput value={name} onChangeText={setName} />
         <GoalSelector selectedGoal={goal} onSelectGoal={setGoal} />
-        <DaysSelector selectedDays={selectedDays} onToggleDay={toggleDay} />
       </ScrollView>
 
       <CreatePlanButton

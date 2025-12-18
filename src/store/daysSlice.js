@@ -18,12 +18,12 @@ export const fetchDays = createAsyncThunk(
 // POST: Criar Dia
 export const addDay = createAsyncThunk(
   'days/addDay',
-  async ({ planId, description }, { rejectWithValue }) => {
+  async ({ planId, description, selectedDays }, { rejectWithValue }) => {
     try {
       const payload = {
         routine: planId, // Obrigatório ser 'routine'
         description: description,
-        day: [1]
+        day: selectedDays // Array de dias da semana: [1, 3, 5] = Segunda, Quarta, Sexta
       };
       const response = await api.post('day/', payload);
       return response.data;

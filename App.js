@@ -46,15 +46,18 @@ function AppNavigator() {
             <Stack.Screen
               name="PlanDetails"
               component={PlanDetailsScreen}
-              options={{ title: 'Gerir Dias' }} />
+              options={{ headerShown: false }}
+            />
             <Stack.Screen
               name="DayDetails"
               component={DayDetailsScreen}
-              options={{ title: 'Gerir Exercícios' }} />
+              options={{ headerShown: false }}
+            />
             <Stack.Screen
               name="ExerciseSelect"
               component={ExerciseSelectScreen}
-              options={{ title: 'Selecionar Exercício' }} />
+              options={{ headerShown: false }}
+            />
           </>
 
         )}
