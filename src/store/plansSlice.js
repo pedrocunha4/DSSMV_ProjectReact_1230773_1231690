@@ -17,18 +17,11 @@ export const addPlan = createAsyncThunk(
   'plans/addPlan',
   async (planData, { rejectWithValue }) => {
     try {
-      const now = new Date();
-      const today = now.toISOString().split('T')[0];
-
-      const future = new Date(now);
-      future.setMonth(future.getMonth() + 6);
-      const next6Months = future.toISOString().split('T')[0];
-
       const payload = {
         name: planData.name,
         description: planData.description || '',
-        start: today,
-        end: next6Months,
+        start: planData.start || new Date().toISOString().split('T')[0],
+        end: planData.end || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         fit_in_week: true,
         is_template: false,
         is_public: false

@@ -36,11 +36,20 @@ export default function PlansScreen() {
     }
   };
 
+  const formatDateRange = (start, end) => {
+    if (!start && !end) return 'Data não disponível';
+    if (start && end) {
+      return `${formatDate(start)} - ${formatDate(end)}`;
+    }
+    if (start) return `Início: ${formatDate(start)}`;
+    if (end) return `Fim: ${formatDate(end)}`;
+    return 'Data não disponível';
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.8}
-      // ADICIONADO: Navegação para o ecrã de detalhes (Dias)
       onPress={() => navigation.navigate('PlanDetails', {
         planId: item.id,
         planName: item.name || item.comment || 'Sem Nome'
@@ -61,7 +70,7 @@ export default function PlansScreen() {
           </View>
         </View>
         <View style={styles.cardFooter}>
-          <Text style={styles.planDate}>{formatDate(item.creation_date)}</Text>
+          <Text style={styles.planDate}>{formatDateRange(item.start, item.end)}</Text>
         </View>
       </View>
     </TouchableOpacity>
