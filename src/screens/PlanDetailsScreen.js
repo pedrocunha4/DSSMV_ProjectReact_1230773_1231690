@@ -66,10 +66,20 @@ export default function PlanDetailsScreen() {
       return;
     }
 
-    const description = newDayDescription.trim() || 
-      selectedDays.map(d => DAYS_OF_WEEK.find(day => day.value === d)?.name).join(', ');
-
-    await dispatch(addDay({ planId, description, selectedDays }));
+    // Criar um dia separado para cada dia da semana selecionado
+    for (const dayValue of selectedDays) {
+      const dayName = DAYS_OF_WEEK.find(day => day.value === dayValue)?.name;
+      const description = newDayDescription.trim() 
+        ? `${newDayDescription} - ${dayName}` 
+        : dayName;
+      
+      await dispatch(addDay({ 
+        planId, 
+        description, 
+        selectedDays: [dayValue] // Apenas um dia por vez
+      }));
+    }
+    
     handleCloseModal();
   };
 
@@ -77,11 +87,20 @@ export default function PlanDetailsScreen() {
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate('DayDetails', { dayId: item.id, dayName: item.description })}
+      activeOpacity={0.7}
     >
-      <Text style={styles.cardText}>
-        {item.description && item.description.trim() !== "" ? item.description : "Dia Sem Nome"}
-      </Text>
-      <Text style={styles.arrow}>›</Text>
+      <View style={styles.cardLeft}>
+        <View style={styles.cardIndicator} />
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>
+            {item.description && item.description.trim() !== "" ? item.description : "Dia Sem Nome"}
+          </Text>
+          <Text style={styles.cardSubtitle}>Toca para adicionar exercícios</Text>
+        </View>
+      </View>
+      <View style={styles.cardArrow}>
+        <Text style={styles.arrow}>›</Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -109,9 +128,11 @@ export default function PlanDetailsScreen() {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📅</Text>
+              <View style={styles.emptyIconContainer}>
+                <View style={styles.emptyIconCircle} />
+              </View>
               <Text style={styles.emptyText}>Nenhum dia de treino criado</Text>
-              <Text style={styles.emptySubtext}>Toca no botão abaixo para criar!</Text>
+              <Text style={styles.emptySubtext}>Toca no botão + para começar</Text>
             </View>
           }
         />
@@ -204,34 +225,40 @@ export default function PlanDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     backgroundColor: '#007AFF',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 45,
-    paddingBottom: 20,
+    paddingTop: 50,
+    paddingBottom: 18,
     paddingHorizontal: 20,
-    elevation: 4,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   backButton: {
     padding: 8,
+    marginRight: 4,
   },
   backIcon: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '600',
   },
   headerTitle: {
     flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
   headerSpacer: {
-    width: 40,
+    width: 42,
   },
   loadingContainer: {
     flex: 1,
@@ -239,83 +266,121 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    padding: 16,
+    padding: 20,
     paddingBottom: 100,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
+    borderRadius: 14,
+    padding: 0,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  cardLeft: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  cardText: {
-    fontSize: 16,
+  cardIndicator: {
+    width: 4,
+    height: 60,
+    backgroundColor: '#007AFF',
+    marginRight: 16,
+  },
+  cardContent: {
+    flex: 1,
+    paddingVertical: 14,
+  },
+  cardTitle: {
+    fontSize: 17,
     fontWeight: '600',
     color: '#1A1A1A',
-    flex: 1,
+    marginBottom: 4,
+    letterSpacing: 0.2,
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    color: '#8E8E93',
+    fontWeight: '400',
+  },
+  cardArrow: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   },
   arrow: {
-    fontSize: 28,
-    color: '#007AFF',
-    fontWeight: '300',
-    marginLeft: 12,
+    fontSize: 24,
+    color: '#C7C7CC',
+    fontWeight: '400',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
+    paddingHorizontal: 40,
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F0F0F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  emptyIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: '#D1D1D6',
+    borderStyle: 'dashed',
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#333333',
-    marginBottom: 8,
+    color: '#1A1A1A',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   emptySubtext: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 15,
+    color: '#8E8E93',
     textAlign: 'center',
+    lineHeight: 22,
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    bottom: 30,
+    right: 30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#007AFF',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
   fabText: {
-    fontSize: 32,
+    fontSize: 28,
     color: '#FFFFFF',
-    fontWeight: '300',
-    marginTop: -2,
+    fontWeight: '400',
+    marginTop: -1,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   modalOverlayTouchable: {
@@ -327,91 +392,92 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: '85%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 12,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: 22,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#E5E5EA',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: '#1A1A1A',
+    letterSpacing: 0.2,
   },
   modalCloseButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F0F0F0',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F2F2F7',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalCloseText: {
-    fontSize: 18,
-    color: '#666666',
-    fontWeight: '600',
+    fontSize: 20,
+    color: '#8E8E93',
+    fontWeight: '500',
   },
   modalBody: {
-    padding: 20,
-    paddingBottom: 30,
+    padding: 22,
+    paddingBottom: 34,
   },
   modalLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#007AFF',
-    marginBottom: 10,
-    letterSpacing: 0.5,
+    marginBottom: 12,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   modalInput: {
-    backgroundColor: '#F8F8F8',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 20,
+    backgroundColor: '#F2F2F7',
+    borderWidth: 0,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
     fontSize: 16,
-    color: '#333',
+    color: '#1A1A1A',
+    fontWeight: '500',
   },
   daysContainer: {
-    backgroundColor: '#F8F8F8',
     borderRadius: 12,
-    padding: 6,
-    marginBottom: 20,
+    overflow: 'hidden',
+    marginBottom: 24,
   },
   dayOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 8,
-    marginBottom: 4,
+    padding: 16,
+    backgroundColor: '#F2F2F7',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
   },
   dayOptionSelected: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#E8F4FD',
   },
   dayOptionLast: {
-    marginBottom: 0,
+    borderBottomWidth: 0,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     borderColor: '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
     backgroundColor: '#FFFFFF',
   },
   checkboxSelected: {
@@ -420,13 +486,14 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
   },
   dayText: {
-    fontSize: 15,
-    color: '#333',
+    fontSize: 16,
+    color: '#1A1A1A',
     fontWeight: '500',
+    letterSpacing: 0.2,
   },
   dayTextSelected: {
     color: '#007AFF',
@@ -434,19 +501,19 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: '#007AFF',
-    padding: 16,
+    padding: 18,
     borderRadius: 12,
     alignItems: 'center',
     shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
   },
   modalButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
 });
