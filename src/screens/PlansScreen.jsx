@@ -18,6 +18,7 @@ export default function PlansScreen() {
   const { items, status } = useSelector((state) => state.plans);
 
   useEffect(() => {
+    // Garante que busca apenas os planos atualizados (filtro is_public=false já está no slice)
     dispatch(fetchPlans());
   }, [dispatch]);
 
@@ -36,7 +37,15 @@ export default function PlansScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      // ADICIONADO: Navegação para o ecrã de detalhes (Dias)
+      onPress={() => navigation.navigate('PlanDetails', {
+        planId: item.id,
+        planName: item.name || item.comment || 'Sem Nome'
+      })}
+    >
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <View style={styles.planIcon}>
@@ -251,4 +260,3 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
 });
-

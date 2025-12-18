@@ -8,7 +8,9 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import PlansScreen from './src/screens/PlansScreen';
 import PlanCreateScreen from './src/screens/PlanCreateScreen';
 import ExercisesScreen from './src/screens/ExercisesScreen';
-
+import PlanDetailsScreen from './src/screens/PlanDetailsScreen';
+import DayDetailsScreen from './src/screens/DayDetailsScreen';
+import ExerciseSelectScreen from './src/screens/ExerciseSelectScreen';
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
@@ -41,7 +43,20 @@ function AppNavigator() {
               component={ExercisesScreen}
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="PlanDetails"
+              component={PlanDetailsScreen}
+              options={{ title: 'Gerir Dias' }} />
+            <Stack.Screen
+              name="DayDetails"
+              component={DayDetailsScreen}
+              options={{ title: 'Gerir Exercícios' }} />
+            <Stack.Screen
+              name="ExerciseSelect"
+              component={ExerciseSelectScreen}
+              options={{ title: 'Selecionar Exercício' }} />
           </>
+
         )}
       </Stack.Navigator>
     </NavigationContainer>
