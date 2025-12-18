@@ -17,37 +17,66 @@ export const addPlan = createAsyncThunk(
   'plans/addPlan',
   async (planData, { rejectWithValue }) => {
     try {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const future = new Date(now);
+      future.setMonth(future.getMonth() + 6);
+
       const payload = {
         name: planData.name,
         description: planData.description || '',
-        start: planData.start || new Date().toISOString().split('T')[0],
-        end: planData.end || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        start: today,
+        end: future.toISOString().split('T')[0],
         fit_in_week: true,
         is_template: false,
         is_public: false
       };
 
-      console.log("Enviando Payload:", payload);
-
       const response = await api.post('routine/', payload);
       return response.data;
     } catch (err) {
-      console.error("Erro API:", err.response?.data);
       return rejectWithValue(err.response?.data || 'Erro ao criar plano');
     }
   }
 );
 
-const initialState = {
-  items: [],
-  status: 'idle',
-  error: null,
-  createStatus: 'idle',
-};
+export const updatePlan = createAsyncThunk(
+  'plans/updatePlan',
+  async ({ id, name, description, start, end }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`routine/${id}/`, {
+        name,
+        description,
+        start,
+        end
+      });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || 'Erro ao editar plano');
+    }
+  }
+);
+
+export const deletePlan = createAsyncThunk(
+  'plans/deletePlan',
+  async (id, { rejectWithValue }) => {
+    try {
+      await api.delete(`routine/${id}/`);
+      return id;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || 'Erro ao apagar plano');
+    }
+  }
+);
 
 const plansSlice = createSlice({
   name: 'plans',
-  initialState,
+  initialState: {
+    items: [],
+    status: 'idle',
+    error: null,
+    createStatus: 'idle',
+  },
   reducers: {
     resetCreateStatus: (state) => {
       state.createStatus = 'idle';
@@ -65,23 +94,20 @@ const plansSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-      .addCase(addPlan.pending, (state) => {
-        state.createStatus = 'loading';
-        state.error = null;
-      })
       .addCase(addPlan.fulfilled, (state, action) => {
-        state.createStatus = 'success';
         state.items.unshift(action.payload);
       })
-      .addCase(addPlan.rejected, (state, action) => {
-        state.createStatus = 'failed';
-        state.error = typeof action.payload === 'object'
-          ? JSON.stringify(action.payload)
-          : String(action.payload);
+      .addCase(updatePlan.fulfilled, (state, action) => {
+        const index = state.items.findIndex(p => p.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(deletePlan.fulfilled, (state, action) => {
+        state.items = state.items.filter(p => p.id !== action.payload);
       });
   },
 });
 
 export const { resetCreateStatus } = plansSlice.actions;
 export default plansSlice.reducer;
-
