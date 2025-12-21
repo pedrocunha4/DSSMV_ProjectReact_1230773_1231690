@@ -146,7 +146,7 @@ export default function PlansScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <ScrollView>
-              <Text style={styles.modalTitle}>Editar Plano</Text>
+                <Text style={styles.modalTitle}>Editar Plano</Text>
 
               <Text style={styles.label}>Nome do Plano:</Text>
               <TextInput

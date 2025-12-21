@@ -72,7 +72,7 @@ export default function PlanDetailsScreen() {
       const description = newDayDescription.trim() 
         ? `${newDayDescription} - ${dayName}` 
         : dayName;
-      
+
       await dispatch(addDay({ 
         planId, 
         description, 
@@ -93,13 +93,13 @@ export default function PlanDetailsScreen() {
         <View style={styles.cardIndicator} />
         <View style={styles.cardContent}>
           <Text style={styles.cardTitle}>
-            {item.description && item.description.trim() !== "" ? item.description : "Dia Sem Nome"}
-          </Text>
+        {item.description && item.description.trim() !== "" ? item.description : "Dia Sem Nome"}
+      </Text>
           <Text style={styles.cardSubtitle}>Toca para adicionar exercícios</Text>
         </View>
       </View>
       <View style={styles.cardArrow}>
-        <Text style={styles.arrow}>›</Text>
+      <Text style={styles.arrow}>›</Text>
       </View>
     </TouchableOpacity>
   );
