@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -26,6 +27,8 @@ export default function ExercisesScreen() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState(null);
 
   useEffect(() => {
     dispatch(fetchExercises());
@@ -44,6 +47,18 @@ export default function ExercisesScreen() {
   const handleCloseCreateModal = () => {
     setCreateModalVisible(false);
   };
+
+  const handleEditExercise = (exercise) => {
+    setExerciseToEdit(exercise);
+    setSelectedExercise(null); // Fechar modal de detalhes
+    setEditModalVisible(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalVisible(false);
+    setExerciseToEdit(null);
+  };
+
 
   const filteredExercises = (exercises || []).filter((exercise) => {
     if (!exercise || !exercise.name) return false;
@@ -143,6 +158,7 @@ export default function ExercisesScreen() {
         exercise={selectedExercise}
         visible={selectedExercise !== null}
         onClose={() => setSelectedExercise(null)}
+        onEdit={() => handleEditExercise(selectedExercise)}
       />
 
       {/* Botão Flutuante para Criar Exercício */}
@@ -159,6 +175,14 @@ export default function ExercisesScreen() {
         visible={createModalVisible}
         categories={categories}
         onClose={handleCloseCreateModal}
+      />
+
+      {/* Modal de Edição de Exercício */}
+      <CreateExerciseModal
+        visible={editModalVisible}
+        categories={categories}
+        exercise={exerciseToEdit}
+        onClose={handleCloseEditModal}
       />
     </View>
   );

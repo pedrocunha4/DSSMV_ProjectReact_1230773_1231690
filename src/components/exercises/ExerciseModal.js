@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { cleanDescription, getCategoryColor } from '../../utils/exerciseUtils';
 
-export default function ExerciseModal({ exercise, visible, onClose }) {
+export default function ExerciseModal({ exercise, visible, onClose, onEdit }) {
   if (!exercise) return null;
 
   const categoryColor = getCategoryColor(exercise.category_name);
@@ -22,7 +22,7 @@ export default function ExerciseModal({ exercise, visible, onClose }) {
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlayTouchable}
           activeOpacity={1}
           onPress={onClose}
@@ -40,8 +40,8 @@ export default function ExerciseModal({ exercise, visible, onClose }) {
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
-            
-            <ScrollView 
+
+            <ScrollView
               style={styles.modalBody}
               contentContainerStyle={styles.modalBodyContent}
               showsVerticalScrollIndicator={true}
@@ -55,7 +55,7 @@ export default function ExerciseModal({ exercise, visible, onClose }) {
                   </Text>
                 </View>
               </View>
-              
+
               {exercise.description ? (
                 <View style={styles.detailSection}>
                   <Text style={styles.detailLabel}>Descrição</Text>
@@ -71,6 +71,15 @@ export default function ExerciseModal({ exercise, visible, onClose }) {
                 </View>
               )}
             </ScrollView>
+
+            {/* Botões de Ação */}
+            {onEdit && (
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity style={styles.editButton} onPress={onEdit}>
+                  <Text style={styles.editButtonText}>Editar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -194,6 +203,31 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    padding: 20,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    gap: 12,
+  },
+  editButton: {
+    width: '100%',
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

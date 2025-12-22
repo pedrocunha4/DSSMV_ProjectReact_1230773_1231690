@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,14 +10,30 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { addExercise } from '../../store/exercisesSlice';
+import { addExercise, updateExercise } from '../../store/exercisesSlice';
 
-export default function CreateExerciseModal({ visible, categories, onClose }) {
+export default function CreateExerciseModal({ visible, categories, onClose, exercise }) {
   const dispatch = useDispatch();
+  const isEditing = !!exercise;
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newExerciseDescription, setNewExerciseDescription] = useState('');
   const [newExerciseCategory, setNewExerciseCategory] = useState(null);
   const [showCreateCategoryDropdown, setShowCreateCategoryDropdown] = useState(false);
+
+  // Preencher campos quando estiver editando
+  useEffect(() => {
+    if (exercise && visible) {
+      setNewExerciseName(exercise.name || '');
+      setNewExerciseDescription(exercise.description || '');
+      setNewExerciseCategory(exercise.category || null);
+    } else if (!visible) {
+      // Limpar campos quando fechar
+      setNewExerciseName('');
+      setNewExerciseDescription('');
+      setNewExerciseCategory(null);
+      setShowCreateCategoryDropdown(false);
+    }
+  }, [exercise, visible]);
 
   const handleClose = () => {
     setNewExerciseName('');
@@ -27,7 +43,7 @@ export default function CreateExerciseModal({ visible, categories, onClose }) {
     onClose();
   };
 
-  const handleCreateExercise = async () => {
+  const handleSaveExercise = async () => {
     if (!newExerciseName.trim()) {
       Alert.alert('Erro', 'O nome do exercício é obrigatório!');
       return;
@@ -39,37 +55,70 @@ export default function CreateExerciseModal({ visible, categories, onClose }) {
     }
 
     try {
-      const exerciseData = {
-        name: newExerciseName.trim(),
-        categoryId: newExerciseCategory,
-        description: newExerciseDescription.trim(),
-      };
-      
-      const result = await dispatch(addExercise(exerciseData));
+      if (isEditing) {
+        // Atualizar exercício existente
+        const exerciseData = {
+          exerciseId: exercise.id,
+          name: newExerciseName.trim(),
+          categoryId: newExerciseCategory,
+          description: newExerciseDescription.trim(),
+        };
+        
+        const result = await dispatch(updateExercise(exerciseData));
 
-      if (addExercise.fulfilled.match(result)) {
-        Alert.alert('Sucesso', 'Exercício criado com sucesso!');
-        handleClose();
-      } else {
-        // Extrair mensagem de erro corretamente
-        let errorMessage = 'Erro ao criar exercício';
-        if (result.payload) {
-          if (typeof result.payload === 'string') {
-            errorMessage = result.payload;
-          } else if (result.payload.detail) {
-            errorMessage = result.payload.detail;
-          } else if (result.payload.message) {
-            errorMessage = result.payload.message;
-          } else if (result.payload.error) {
-            errorMessage = result.payload.error;
-          } else {
-            errorMessage = JSON.stringify(result.payload);
+        if (updateExercise.fulfilled.match(result)) {
+          Alert.alert('Sucesso', 'Exercício atualizado com sucesso!');
+          handleClose();
+        } else {
+          let errorMessage = 'Erro ao atualizar exercício';
+          if (result.payload) {
+            if (typeof result.payload === 'string') {
+              errorMessage = result.payload;
+            } else if (result.payload.detail) {
+              errorMessage = result.payload.detail;
+            } else if (result.payload.message) {
+              errorMessage = result.payload.message;
+            } else if (result.payload.error) {
+              errorMessage = result.payload.error;
+            } else {
+              errorMessage = JSON.stringify(result.payload);
+            }
           }
+          Alert.alert('Erro', errorMessage);
         }
-        Alert.alert('Erro', errorMessage);
+      } else {
+        // Criar novo exercício
+        const exerciseData = {
+          name: newExerciseName.trim(),
+          categoryId: newExerciseCategory,
+          description: newExerciseDescription.trim(),
+        };
+        
+        const result = await dispatch(addExercise(exerciseData));
+
+        if (addExercise.fulfilled.match(result)) {
+          Alert.alert('Sucesso', 'Exercício criado com sucesso!');
+          handleClose();
+        } else {
+          let errorMessage = 'Erro ao criar exercício';
+          if (result.payload) {
+            if (typeof result.payload === 'string') {
+              errorMessage = result.payload;
+            } else if (result.payload.detail) {
+              errorMessage = result.payload.detail;
+            } else if (result.payload.message) {
+              errorMessage = result.payload.message;
+            } else if (result.payload.error) {
+              errorMessage = result.payload.error;
+            } else {
+              errorMessage = JSON.stringify(result.payload);
+            }
+          }
+          Alert.alert('Erro', errorMessage);
+        }
       }
     } catch (err) {
-      Alert.alert('Erro', 'Erro ao criar exercício');
+      Alert.alert('Erro', isEditing ? 'Erro ao atualizar exercício' : 'Erro ao criar exercício');
     }
   };
 
@@ -88,7 +137,9 @@ export default function CreateExerciseModal({ visible, categories, onClose }) {
         />
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Criar Exercício</Text>
+            <Text style={styles.modalTitle}>
+              {isEditing ? 'Editar Exercício' : 'Criar Exercício'}
+            </Text>
             <TouchableOpacity onPress={handleClose} style={styles.modalCloseButton}>
               <Text style={styles.modalCloseText}>✕</Text>
             </TouchableOpacity>
@@ -159,8 +210,10 @@ export default function CreateExerciseModal({ visible, categories, onClose }) {
               </View>
             )}
 
-            <TouchableOpacity style={styles.modalButton} onPress={handleCreateExercise}>
-              <Text style={styles.modalButtonText}>Criar Exercício</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={handleSaveExercise}>
+              <Text style={styles.modalButtonText}>
+                {isEditing ? 'Salvar Alterações' : 'Criar Exercício'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
