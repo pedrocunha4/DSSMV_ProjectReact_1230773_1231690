@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, Modal, TextInput, ScrollView
+  View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPlans, deletePlan, updatePlan } from '../store/plansSlice';
+import { fetchPlans, deletePlan } from '../store/plansSlice';
 import { useNavigation } from '@react-navigation/native';
+import { isPlanActiveToday } from '../utils/planUtils';
+import EditPlanModal from '../components/plans/EditPlanModal';
+import PlanCard from '../components/plans/PlanCard';
 
 export default function PlansScreen() {
   const dispatch = useDispatch();
@@ -13,11 +16,7 @@ export default function PlansScreen() {
 
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
-
-  const [editName, setEditName] = useState('');
-  const [editDesc, setEditDesc] = useState(''); // Vai guardar "Ganhar massa..." ou "Perder peso"
-  const [editStart, setEditStart] = useState('');
-  const [editEnd, setEditEnd] = useState('');
+  const [showOnlyActive, setShowOnlyActive] = useState(false);
 
   useEffect(() => {
     dispatch(fetchPlans());
@@ -36,41 +35,12 @@ export default function PlansScreen() {
 
   const openEditModal = (plan) => {
     setEditingPlan(plan);
-    setEditName(plan.name || '');
-    // Se a descrição atual não for uma das opções, pomos vazio ou mantemos
-    setEditDesc(plan.description || '');
-
-    setEditStart(plan.start || plan.start_date || '');
-    setEditEnd(plan.end || plan.end_date || '');
-
     setEditModalVisible(true);
   };
 
-  const handleSaveEdit = async () => {
-    if (!editName.trim()) {
-      Alert.alert("Erro", "O nome é obrigatório.");
-      return;
-    }
-    if (!editDesc) {
-      Alert.alert("Erro", "Selecione um objetivo (Ganhar massa ou Perder peso).");
-      return;
-    }
-
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(editStart) || !dateRegex.test(editEnd)) {
-      Alert.alert("Erro", "As datas devem estar no formato AAAA-MM-DD (ex: 2025-01-30).");
-      return;
-    }
-
-    await dispatch(updatePlan({
-      id: editingPlan.id,
-      name: editName,
-      description: editDesc,
-      start: editStart,
-      end: editEnd
-    }));
-
+  const handleCloseEditModal = () => {
     setEditModalVisible(false);
+    setEditingPlan(null);
   };
 
   const formatDate = (dateString) => {
@@ -80,39 +50,20 @@ export default function PlansScreen() {
     } catch { return dateString; }
   };
 
+  // Filtrar planos baseado no filtro de ativos
+  const filteredPlans = useMemo(() => {
+    if (!showOnlyActive) return items;
+    return items.filter(plan => isPlanActiveToday(plan));
+  }, [items, showOnlyActive]);
+
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.8}
+    <PlanCard
+      plan={item}
       onPress={() => navigation.navigate('PlanDetails', { planId: item.id, planName: item.name })}
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.cardHeader}>
-          <View style={styles.planIcon}>
-            <Text style={styles.planIconText}>📋</Text>
-          </View>
-          <View style={styles.planInfo}>
-            <Text style={styles.planName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.planDesc} numberOfLines={1}>Objetivo: {item.description ? item.description.replace('Objetivo: ', '') : 'Sem objetivo'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.cardFooter}>
-          <Text style={styles.planDate}>
-            {formatDate(item.start || item.start_date)} - {formatDate(item.end || item.end_date)}
-          </Text>
-
-          <View style={styles.actions}>
-            <TouchableOpacity style={[styles.actionButton, styles.editBtn]} onPress={() => openEditModal(item)}>
-              <Text style={styles.actionText}>✎</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionButton, styles.deleteBtn]} onPress={() => handleDelete(item.id)}>
-              <Text style={styles.actionText}>🗑️</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
+      onEdit={() => openEditModal(item)}
+      onDelete={() => handleDelete(item.id)}
+      formatDate={formatDate}
+    />
   );
 
   return (
@@ -122,18 +73,29 @@ export default function PlansScreen() {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus Planos</Text>
-        <View style={{width: 30}} />
+        <TouchableOpacity 
+          onPress={() => setShowOnlyActive(!showOnlyActive)}
+          style={[styles.filterButton, showOnlyActive && styles.filterButtonActive]}
+        >
+          <Text style={[styles.filterButtonText, showOnlyActive && styles.filterButtonTextActive]}>
+            {showOnlyActive ? '✓ Ativos' : 'Todos'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {status === 'loading' ? (
         <ActivityIndicator size="large" color="#007AFF" style={{marginTop: 50}} />
       ) : (
         <FlatList
-          data={items}
+          data={filteredPlans}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContent}
-          ListEmptyComponent={<Text style={styles.emptyText}>Sem planos.</Text>}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              {showOnlyActive ? 'Nenhum plano ativo hoje.' : 'Sem planos.'}
+            </Text>
+          }
         />
       )}
 
@@ -141,71 +103,12 @@ export default function PlansScreen() {
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
-      {/* MODAL DE EDIÇÃO */}
-      <Modal visible={isEditModalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ScrollView>
-                <Text style={styles.modalTitle}>Editar Plano</Text>
-
-              <Text style={styles.label}>Nome do Plano:</Text>
-              <TextInput
-                style={styles.input}
-                value={editName}
-                onChangeText={setEditName}
-              />
-
-              <Text style={styles.label}>Objetivo:</Text>
-              <View style={styles.objectiveContainer}>
-                <TouchableOpacity
-                  style={[styles.objectiveBtn, editDesc === 'Ganhar massa muscular' && styles.objectiveBtnSelected]}
-                  onPress={() => setEditDesc('Ganhar massa muscular')}
-                >
-                  <Text style={[styles.objectiveText, editDesc === 'Ganhar massa muscular' && styles.objectiveTextSelected]}>
-                    💪 Ganhar Massa
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.objectiveBtn, editDesc === 'Perder peso' && styles.objectiveBtnSelected]}
-                  onPress={() => setEditDesc('Perder peso')}
-                >
-                  <Text style={[styles.objectiveText, editDesc === 'Perder peso' && styles.objectiveTextSelected]}>
-                    🏃 Perder Peso
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.label}>Data Início (AAAA-MM-DD):</Text>
-              <TextInput
-                style={styles.input}
-                value={editStart}
-                onChangeText={setEditStart}
-                placeholder="2025-01-01"
-                keyboardType="numeric"
-              />
-
-              <Text style={styles.label}>Data Fim (AAAA-MM-DD):</Text>
-              <TextInput
-                style={styles.input}
-                value={editEnd}
-                onChangeText={setEditEnd}
-                placeholder="2025-06-01"
-                keyboardType="numeric"
-              />
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.cancelBtn}>
-                  <Text style={{color: '#666'}}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleSaveEdit} style={styles.saveBtn}>
-                  <Text style={{color: '#fff', fontWeight: 'bold'}}>Guardar</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      {/* Modal de Edição */}
+      <EditPlanModal
+        visible={isEditModalVisible}
+        plan={editingPlan}
+        onClose={handleCloseEditModal}
+      />
     </View>
   );
 }
@@ -213,58 +116,29 @@ export default function PlansScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   header: { backgroundColor: '#007AFF', padding: 20, paddingTop: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold', flex: 1, textAlign: 'center' },
   backIcon: { color: '#FFF', fontSize: 24 },
+  filterButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  filterButtonActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  filterButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  filterButtonTextActive: {
+    color: '#007AFF',
+  },
   listContent: { padding: 15, paddingBottom: 100 },
-
-  card: { backgroundColor: '#FFF', borderRadius: 12, marginBottom: 15, elevation: 3 },
-  cardContent: { padding: 15 },
-  cardHeader: { flexDirection: 'row', marginBottom: 10 },
-  planIcon: { backgroundColor: '#E3F2FD', width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  planIconText: { fontSize: 20 },
-  planInfo: { flex: 1, justifyContent: 'center' },
-  planName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  planDesc: { fontSize: 13, color: '#666' },
-
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 10 },
-  planDate: { fontSize: 12, color: '#999' },
-
-  actions: { flexDirection: 'row' },
-  actionButton: { padding: 8, borderRadius: 8, marginLeft: 10 },
-  editBtn: { backgroundColor: '#FFF3E0' },
-  deleteBtn: { backgroundColor: '#FFEBEE' },
-  actionText: { fontSize: 16 },
-
   fab: { position: 'absolute', bottom: 25, right: 25, backgroundColor: '#007AFF', width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 5 },
   fabText: { color: '#FFF', fontSize: 30, marginTop: -3 },
   emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
-
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#FFF', borderRadius: 15, padding: 20, maxHeight: '90%' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
-  label: { fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 5, marginTop: 10 },
-  input: { borderWidth: 1, borderColor: '#DDD', borderRadius: 8, padding: 12, backgroundColor: '#FAFAFA' },
-
-  objectiveContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  objectiveBtn: {
-    flex: 1,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    backgroundColor: '#FAFAFA'
-  },
-  objectiveBtnSelected: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#007AFF',
-    borderWidth: 2
-  },
-  objectiveText: { color: '#666' },
-  objectiveTextSelected: { color: '#007AFF', fontWeight: 'bold' },
-
-  modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 },
-  cancelBtn: { padding: 10, marginRight: 10 },
-  saveBtn: { backgroundColor: '#007AFF', padding: 10, borderRadius: 8 }
 });
