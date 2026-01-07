@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDays, clearDays, deleteDay } from '../store/daysSlice';
+import { fetchDays, deleteDay } from '../store/daysSlice';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import CreateDayModal from '../components/plans/CreateDayModal';
 import DayCard from '../components/plans/DayCard';
@@ -67,12 +67,8 @@ export default function PlanDetailsScreen() {
 
   const handleDeleteDay = async (day) => {
     if (!day || !day.id) return;
-    const result = await dispatch(deleteDay(day.id));
-    if (deleteDay.fulfilled.match(result)) {
-      if (planId) {
-        dispatch(fetchDays(planId));
-      }
-    }
+    await dispatch(deleteDay(day.id));
+    // Não fazemos refetch aqui para evitar mostrar loading; a lista é atualizada via reducer
   };
 
   const renderItem = ({ item }) => (
