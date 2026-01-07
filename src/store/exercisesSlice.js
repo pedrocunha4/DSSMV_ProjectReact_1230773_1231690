@@ -1,6 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
 
+// Helper: normaliza a descrição para UI (remove espaços finais e remove pontos extras no fim)
+const normalizeDescriptionForUI = (text) => {
+  if (!text) return '';
+  let cleaned = String(text);
+  // remover espaços/brancos no fim
+  cleaned = cleaned.replace(/\s+$/g, '');
+  // se terminar com 4+ pontos, remover todos os pontos finais extras
+  cleaned = cleaned.replace(/\.{4,}$/g, '');
+  return cleaned;
+};
+
 // Mapeamento de categorias para português (conforme a imagem)
 const categoryTranslations = {
   'Chest': 'Peito',
@@ -67,17 +78,12 @@ export const fetchExerciseCategories = createAsyncThunk(
 // POST: Criar Exercício
 export const addExercise = createAsyncThunk(
   'exercises/addExercise',
-  async (params, { getState, rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
       // Desestruturar manualmente para garantir
       const name = params?.name;
       let categoryId = params?.categoryId;
       const description = params?.description;
-
-      // Se categoryId ainda for undefined, tentar outras formas
-      if (categoryId === undefined) {
-        categoryId = params?.categoryId || params?.['categoryId'];
-      }
 
       // Validar categoryId
       if (categoryId === null || categoryId === undefined || categoryId === '') {
@@ -102,21 +108,22 @@ export const addExercise = createAsyncThunk(
 
       // Criar a tradução usando o endpoint correto exercise-translation/
       // A API requer que description tenha no mínimo 40 caracteres
-      let finalDescription = description && description.trim() ? description.trim() : '';
+      const originalDescription = description && description.trim() ? description.trim() : '';
+      let finalDescription = originalDescription;
 
       // Se a descrição estiver vazia ou tiver menos de 40 caracteres, usar descrição padrão
       if (finalDescription.length < 40) {
         finalDescription = finalDescription || 'Não se encontra uma descrição disponível';
-        // Preencher até 40 caracteres se necessário
-        while (finalDescription.length < 40) {
-          finalDescription += '.';
+        // Preencher até 40 caracteres com pontos para satisfazer a API
+        if (finalDescription.length < 40) {
+          finalDescription = finalDescription.padEnd(40, '.');
         }
       }
 
       const translationPayload = {
         exercise: exerciseId, // ID do exercício base criado acima
         name: name,
-        description: finalDescription, // Mínimo 40 caracteres
+        description: finalDescription, // Mínimo 40 caracteres, acolchoado com espaços
         language: 2, // Inglês (language ID: 2)
         license_author: '', // Opcional
       };
@@ -147,13 +154,16 @@ export const addExercise = createAsyncThunk(
       const translation = englishTranslation || exerciseFromApi.translations?.[0];
       const exerciseName = translation?.name || name;
 
+      // Usar a descrição original do utilizador para UI, caindo para a da API se não houver
+      const uiDescription = normalizeDescriptionForUI(originalDescription || translation?.description || '');
+
       // Retornar no formato esperado
       return {
         id: exerciseFromApi.id,
         name: exerciseName,
         category: exerciseCategoryId,
         category_name: categoryNamePt,
-        description: translation?.description || description || '',
+        description: uiDescription,
       };
     } catch (err) {
       // Extrair mensagem de erro de forma mais limpa
@@ -213,21 +223,17 @@ export const updateExercise = createAsyncThunk(
       const englishTranslation = exerciseFromApi.translations?.find((t) => t.language === 2);
       if (englishTranslation) {
         // Atualizar tradução existente
-        let finalDescription = description !== undefined 
-          ? (description.trim() || englishTranslation.description || '') 
+        const providedDescription = description !== undefined ? (description.trim() || '') : undefined;
+        let finalDescription = providedDescription !== undefined
+          ? (providedDescription || englishTranslation.description || '')
           : englishTranslation.description || '';
         
         // A API requer que description tenha no mínimo 40 caracteres
         if (finalDescription.length < 40 && finalDescription.length > 0) {
-          while (finalDescription.length < 40) {
-            finalDescription += '.';
-          }
+          finalDescription = finalDescription.padEnd(40, '.');
         } else if (finalDescription.length === 0) {
           // Se estiver vazia, usar descrição padrão
-          finalDescription = 'Não se encontra uma descrição disponível';
-          while (finalDescription.length < 40) {
-            finalDescription += '.';
-          }
+          finalDescription = 'Não se encontra uma descrição disponível'.padEnd(40, '.');
         }
 
         const translationPayload = {
@@ -242,9 +248,7 @@ export const updateExercise = createAsyncThunk(
         let finalDescription = description ? description.trim() : '';
         if (finalDescription.length < 40) {
           finalDescription = finalDescription || 'Não se encontra uma descrição disponível';
-          while (finalDescription.length < 40) {
-            finalDescription += '.';
-          }
+          finalDescription = finalDescription.padEnd(40, '.');
         }
 
         await api.post('exercise-translation/', {
@@ -279,12 +283,16 @@ export const updateExercise = createAsyncThunk(
       const updatedTranslation = updatedEnglishTranslation || updatedExercise.translations?.[0];
       const exerciseName = updatedTranslation?.name || name || 'Sem nome';
 
+      const uiDescription = normalizeDescriptionForUI(
+        (description && description.trim()) || updatedTranslation?.description || ''
+      );
+
       return {
         id: updatedExercise.id,
         name: exerciseName,
         category: exerciseCategoryId,
         category_name: categoryNamePt,
-        description: updatedTranslation?.description || description || '',
+        description: uiDescription,
       };
     } catch (err) {
       let errorMessage = 'Erro ao atualizar exercício';
@@ -358,7 +366,7 @@ export const fetchExercises = createAsyncThunk(
             name: exerciseName,
             category: categoryId,
             category_name: categoryNamePt,
-            description: translation?.description || '',
+            description: normalizeDescriptionForUI(translation?.description || ''),
           };
         });
 

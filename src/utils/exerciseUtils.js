@@ -2,10 +2,10 @@
 export const cleanDescription = (html) => {
   if (!html) return '';
   
-  return html
+  let text = html
     .replace(/<p>/gi, '')
     .replace(/<\/p>/gi, '\n\n')
-    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<br\s*\/?>(\n)?/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -13,6 +13,11 @@ export const cleanDescription = (html) => {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .trim();
+
+  // Remover sequências longas de pontos no fim (padding da API), mantendo reticências legítimas '...'
+  text = text.replace(/\.{4,}$/g, '');
+
+  return text;
 };
 
 // Função para obter cor da categoria
@@ -38,4 +43,3 @@ export const getCategoryColor = (categoryName) => {
   };
   return colorMap[categoryName || ''] || '#95A5A6';
 };
-
