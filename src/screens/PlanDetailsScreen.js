@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDays, clearDays } from '../store/daysSlice';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import CreateDayModal from '../components/plans/CreateDayModal';
 import DayCard from '../components/plans/DayCard';
 
@@ -14,21 +14,42 @@ export default function PlanDetailsScreen() {
   const { planId, planName } = route.params;
 
   const dispatch = useDispatch();
-  const { items: allDays, status } = useSelector((state) => state.days);
+  const { items: allDays, status, error } = useSelector((state) => state.days);
   const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchDays(planId));
+  // Recarrega os dias sempre que o ecrã recebe foco ou quando o planId muda
+  useFocusEffect(
+    React.useCallback(() => {
+      if (planId) {
+        dispatch(fetchDays(planId));
+      }
+    }, [dispatch, planId])
+  );
 
-    return () => {
-      dispatch(clearDays());
-    };
-  }, [dispatch, planId]);
-
+  // Filtro para garantir que apenas os dias do plano atual são mostrados
   const filteredDays = useMemo(() => {
+    if (!planId || !allDays || allDays.length === 0) {
+      return [];
+    }
+    
+    const planIdNum = Number(planId);
+    const planIdStr = String(planId);
+    
     return allDays.filter(day => {
-      const routineId = day.routine || day.training;
-      return routineId === planId;
+      if (!day) return false;
+      
+      const routineId = day.routine || day.training || day.routine_id;
+      if (routineId === null || routineId === undefined) return false;
+      
+      let routineIdValue = routineId;
+      if (typeof routineId === 'object' && routineId !== null) {
+        routineIdValue = routineId.id || routineId;
+      }
+      
+      const routineNum = Number(routineIdValue);
+      const routineStr = String(routineIdValue);
+      
+      return routineNum === planIdNum || routineStr === planIdStr;
     });
   }, [allDays, planId]);
 
@@ -38,6 +59,10 @@ export default function PlanDetailsScreen() {
 
   const handleCloseModal = () => {
     setModalVisible(false);
+    // Recarregar os dias após fechar o modal (caso tenha criado um dia)
+    if (planId) {
+      dispatch(fetchDays(planId));
+    }
   };
 
   const renderItem = ({ item }) => (
@@ -62,6 +87,11 @@ export default function PlanDetailsScreen() {
       {status === 'loading' ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : status === 'failed' ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Erro ao carregar dias</Text>
+          <Text style={styles.emptySubtext}>{error || 'Tenta novamente mais tarde'}</Text>
         </View>
       ) : (
         <FlatList
@@ -144,8 +174,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 100,
+    paddingTop: 8,
   },
   emptyContainer: {
     flex: 1,

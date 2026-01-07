@@ -2,19 +2,21 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function DayCard({ day, onPress }) {
+  const dayName = day.description && day.description.trim() !== "" 
+    ? day.description 
+    : "Dia Sem Nome";
+
   return (
     <TouchableOpacity
       style={styles.card}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
     >
       <View style={styles.cardLeft}>
         <View style={styles.cardIndicator} />
         <View style={styles.cardContent}>
-          <Text style={styles.cardTitle}>
-            {day.description && day.description.trim() !== "" 
-              ? day.description 
-              : "Dia Sem Nome"}
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {dayName}
           </Text>
           <Text style={styles.cardSubtitle}>Toca para adicionar exercícios</Text>
         </View>
@@ -29,53 +31,60 @@ export default function DayCard({ day, onPress }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 0,
-    marginBottom: 12,
+    borderRadius: 16,
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   cardLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 72,
   },
   cardIndicator: {
-    width: 4,
-    height: 60,
+    width: 5,
+    height: '100%',
     backgroundColor: '#007AFF',
-    marginRight: 16,
+    borderRadius: 0,
   },
   cardContent: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 18,
+    paddingLeft: 18,
+    paddingRight: 12,
   },
   cardTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#1A1A1A',
-    marginBottom: 4,
-    letterSpacing: 0.2,
+    marginBottom: 6,
+    letterSpacing: 0.1,
   },
   cardSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#8E8E93',
     fontWeight: '400',
+    letterSpacing: 0.1,
   },
   cardArrow: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   arrow: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#C7C7CC',
-    fontWeight: '400',
+    fontWeight: '300',
   },
 });
 

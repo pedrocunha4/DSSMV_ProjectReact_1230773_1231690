@@ -1,14 +1,42 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
 
-// GET: Buscar Dias (CORRIGIDO: usa 'routine' em vez de 'training')
+// GET: Buscar Dias com paginação manual (a API ignora alguns filtros e é paginada)
 export const fetchDays = createAsyncThunk(
   'days/fetchDays',
   async (planId, { rejectWithValue }) => {
     try {
-      // O filtro CORRETO é 'routine'. Se usarmos 'training', a API ignora e devolve tudo.
-      const response = await api.get(`day/?routine=${planId}`);
-      return response.data.results;
+      // A API é paginada e o filtro por routine nem sempre funciona corretamente.
+      // Por isso:
+      // 1. Buscamos TODAS as páginas
+      // 2. Filtramos por routine === planId no cliente
+      let url = `day/?limit=50`;
+      let allResults = [];
+
+      while (url) {
+        const response = await api.get(url);
+        const data = response.data || {};
+        const results = Array.isArray(data.results) ? data.results : [];
+        allResults = allResults.concat(results);
+        url = data.next || null;
+      }
+
+      // Filtrar no cliente apenas os dias deste plano de treino
+      const planIdNum = Number(planId);
+      const planIdStr = String(planId);
+
+      const filteredByPlan = allResults.filter((day) => {
+        if (!day) return false;
+        const routineId = day.routine;
+        if (routineId === null || routineId === undefined) return false;
+
+        const routineNum = Number(routineId);
+        const routineStr = String(routineId);
+
+        return routineNum === planIdNum || routineStr === planIdStr;
+      });
+
+      return filteredByPlan;
     } catch (err) {
       return rejectWithValue(err.response?.data || 'Erro ao buscar dias');
     }
@@ -50,7 +78,8 @@ const daysSlice = createSlice({
       })
       .addCase(fetchDays.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.items = action.payload;
+        state.items = Array.isArray(action.payload) ? action.payload : [];
+        state.error = null;
       })
       .addCase(fetchDays.rejected, (state, action) => {
         state.status = 'failed';

@@ -51,11 +51,17 @@ export default function CreateDayModal({ visible, planId, onClose }) {
         ? `${newDayDescription} - ${dayName}` 
         : dayName;
 
-      await dispatch(addDay({ 
+      const result = await dispatch(addDay({ 
         planId, 
         description, 
         selectedDays: [dayValue] // Apenas um dia por vez
       }));
+      
+      // Se houver erro, mostrar alerta
+      if (addDay.rejected.match(result)) {
+        Alert.alert('Erro', 'Falha ao criar dia de treino');
+        return;
+      }
     }
     
     handleClose();
