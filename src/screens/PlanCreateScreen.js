@@ -19,7 +19,6 @@ export default function PlanCreateScreen() {
   const [name, setName] = useState('');
   const [goal, setGoal] = useState(null);
   
-  // Datas padrão: hoje até 6 meses no futuro
   const getDefaultDates = () => {
     const today = new Date();
     const future = new Date(today);
@@ -50,7 +49,6 @@ export default function PlanCreateScreen() {
       return;
     }
 
-    // Validar datas
     if (!startDate || !endDate) {
       Alert.alert('Erro', 'As datas são obrigatórias!');
       return;

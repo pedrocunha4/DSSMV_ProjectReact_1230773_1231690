@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +19,7 @@ import CreateExerciseModal from '../components/exercises/CreateExerciseModal';
 export default function ExercisesScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const { items: exercises, categories, status, error } = useSelector((state) => state.exercises);
+  const { items: exercises, categories, status, error, hasMore, nextOffset, isLoadingMore } = useSelector((state) => state.exercises);
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -31,8 +30,14 @@ export default function ExercisesScreen() {
   const [exerciseToEdit, setExerciseToEdit] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchExercises());
-    dispatch(fetchExerciseCategories());
+    // Carregar primeira página apenas se ainda não houver dados
+    if (!exercises || exercises.length === 0) {
+      dispatch(fetchExercises({ limit: 50, offset: 0 }));
+    }
+    // Carregar categorias apenas uma vez
+    if (!categories || categories.length === 0) {
+      dispatch(fetchExerciseCategories());
+    }
   }, [dispatch]);
 
   const handleClearFilters = () => {
@@ -59,6 +64,11 @@ export default function ExercisesScreen() {
     setExerciseToEdit(null);
   };
 
+  const handleLoadMore = () => {
+    if (hasMore && !isLoadingMore) {
+      dispatch(fetchExercises({ limit: 50, offset: nextOffset }));
+    }
+  };
 
   const filteredExercises = (exercises || []).filter((exercise) => {
     if (!exercise || !exercise.name) return false;
@@ -80,6 +90,25 @@ export default function ExercisesScreen() {
       onPress={() => setSelectedExercise(item)}
     />
   );
+
+  const renderListFooter = () => {
+    if (status !== 'succeeded') return null;
+    if (isLoadingMore) {
+      return (
+        <View style={{ paddingVertical: 16 }}>
+          <ActivityIndicator size="small" color="#007AFF" />
+        </View>
+      );
+    }
+    if (hasMore) {
+      return (
+        <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
+          <Text style={styles.loadMoreText}>Ver mais</Text>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  };
 
   return (
     <View style={styles.container}>
@@ -130,8 +159,10 @@ export default function ExercisesScreen() {
           <TouchableOpacity
             style={styles.retryButton}
             onPress={() => {
-              dispatch(fetchExercises());
-              dispatch(fetchExerciseCategories());
+              dispatch(fetchExercises({ limit: 50, offset: 0 }));
+              if (!categories || categories.length === 0) {
+                dispatch(fetchExerciseCategories());
+              }
             }}
           >
             <Text style={styles.retryButtonText}>Tentar Novamente</Text>
@@ -150,6 +181,7 @@ export default function ExercisesScreen() {
                 : 'Nenhum exercício disponível.'}
             </Text>
           }
+          ListFooterComponent={renderListFooter}
         />
       )}
 
@@ -310,6 +342,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  loadMoreButton: {
+    alignSelf: 'center',
+    backgroundColor: '#EAF2FF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  loadMoreText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   fab: {
     position: 'absolute',
     bottom: 30,
@@ -333,4 +378,3 @@ const styles = StyleSheet.create({
     marginTop: -1,
   },
 });
-
