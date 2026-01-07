@@ -3,7 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchDays, clearDays } from '../store/daysSlice';
+import { fetchDays, clearDays, deleteDay } from '../store/daysSlice';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import CreateDayModal from '../components/plans/CreateDayModal';
 import DayCard from '../components/plans/DayCard';
@@ -65,10 +65,21 @@ export default function PlanDetailsScreen() {
     }
   };
 
+  const handleDeleteDay = async (day) => {
+    if (!day || !day.id) return;
+    const result = await dispatch(deleteDay(day.id));
+    if (deleteDay.fulfilled.match(result)) {
+      if (planId) {
+        dispatch(fetchDays(planId));
+      }
+    }
+  };
+
   const renderItem = ({ item }) => (
     <DayCard
       day={item}
       onPress={() => navigation.navigate('DayDetails', { dayId: item.id, dayName: item.description })}
+      onDelete={handleDeleteDay}
     />
   );
 

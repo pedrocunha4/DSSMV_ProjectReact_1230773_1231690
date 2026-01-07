@@ -61,6 +61,20 @@ export const addDay = createAsyncThunk(
   }
 );
 
+// DELETE: Eliminar Dia
+export const deleteDay = createAsyncThunk(
+  'days/deleteDay',
+  async (dayId, { rejectWithValue }) => {
+    try {
+      if (!dayId) return rejectWithValue('ID do dia é obrigatório');
+      await api.delete(`day/${dayId}/`);
+      return dayId;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || 'Erro ao eliminar dia');
+    }
+  }
+);
+
 const daysSlice = createSlice({
   name: 'days',
   initialState: { items: [], status: 'idle', error: null },
@@ -88,6 +102,13 @@ const daysSlice = createSlice({
       .addCase(addDay.fulfilled, (state, action) => {
         // Adiciona o novo dia ao INÍCIO da lista
         state.items.unshift(action.payload);
+      })
+      .addCase(deleteDay.fulfilled, (state, action) => {
+        const id = action.payload;
+        state.items = state.items.filter((d) => d && d.id !== id);
+      })
+      .addCase(deleteDay.rejected, (state, action) => {
+        state.error = action.payload || 'Erro ao eliminar dia';
       });
   },
 });

@@ -1,10 +1,22 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
-export default function DayCard({ day, onPress }) {
-  const dayName = day.description && day.description.trim() !== "" 
+export default function DayCard({ day, onPress, onDelete }) {
+  const dayName = day.description && day.description.trim() !== ""
     ? day.description 
     : "Dia Sem Nome";
+
+  const handleDelete = () => {
+    if (!onDelete) return;
+    Alert.alert(
+      'Eliminar dia',
+      `Tens a certeza que queres eliminar "${dayName}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', style: 'destructive', onPress: () => onDelete(day) },
+      ]
+    );
+  };
 
   return (
     <TouchableOpacity
@@ -21,7 +33,10 @@ export default function DayCard({ day, onPress }) {
           <Text style={styles.cardSubtitle}>Toca para adicionar exercícios</Text>
         </View>
       </View>
-      <View style={styles.cardArrow}>
+      <View style={styles.actions}>
+        <TouchableOpacity onPress={handleDelete} style={styles.trashButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={styles.trashIcon}>🗑️</Text>
+        </TouchableOpacity>
         <Text style={styles.arrow}>›</Text>
       </View>
     </TouchableOpacity>
@@ -75,18 +90,24 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     letterSpacing: 0.1,
   },
-  cardArrow: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    justifyContent: 'center',
+  actions: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  trashButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  trashIcon: {
+    fontSize: 18,
+    color: '#FF3B30',
   },
   arrow: {
     fontSize: 28,
     color: '#C7C7CC',
     fontWeight: '300',
+    marginLeft: 6,
   },
 });
-
-
-
