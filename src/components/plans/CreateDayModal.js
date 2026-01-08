@@ -44,7 +44,6 @@ export default function CreateDayModal({ visible, planId, onClose }) {
       return;
     }
 
-    // Criar um dia separado para cada dia da semana selecionado
     for (const dayValue of selectedDays) {
       const dayName = DAYS_OF_WEEK.find(day => day.value === dayValue)?.name;
       const description = newDayDescription.trim() 
@@ -54,10 +53,9 @@ export default function CreateDayModal({ visible, planId, onClose }) {
       const result = await dispatch(addDay({ 
         planId, 
         description, 
-        selectedDays: [dayValue] // Apenas um dia por vez
+        selectedDays: [dayValue]
       }));
       
-      // Se houver erro, mostrar alerta
       if (addDay.rejected.match(result)) {
         Alert.alert('Erro', 'Falha ao criar dia de treino');
         return;

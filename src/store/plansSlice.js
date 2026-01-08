@@ -22,14 +22,26 @@ export const addPlan = createAsyncThunk(
       const future = new Date(now);
       future.setMonth(future.getMonth() + 6);
 
+      const providedStart = planData?.start;
+      const providedEnd = planData?.end;
+
+      const isValidDate = (d) => {
+        if (!d || typeof d !== 'string') return false;
+        const parsed = new Date(d);
+        return !isNaN(parsed.getTime());
+      };
+
+      const start = isValidDate(providedStart) ? providedStart : today;
+      const end = isValidDate(providedEnd) ? providedEnd : future.toISOString().split('T')[0];
+
       const payload = {
         name: planData.name,
         description: planData.description || '',
-        start: today,
-        end: future.toISOString().split('T')[0],
+        start,
+        end,
         fit_in_week: true,
         is_template: false,
-        is_public: false
+        is_public: false,
       };
 
       const response = await api.post('routine/', payload);
@@ -48,7 +60,7 @@ export const updatePlan = createAsyncThunk(
         name,
         description,
         start,
-        end
+        end,
       });
       return response.data;
     } catch (err) {

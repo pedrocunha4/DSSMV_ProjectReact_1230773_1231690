@@ -54,7 +54,6 @@ export default function PlansScreen() {
     } catch { return dateString; }
   };
 
-  // Fetch routines that have today's weekday when filterByWeekday is toggled or plans change
   useEffect(() => {
     const fetchDaysForWeekday = async () => {
       if (!filterByWeekday) {
@@ -120,7 +119,6 @@ export default function PlansScreen() {
     fetchDaysForWeekday();
   }, [filterByWeekday, items]);
 
-  // Compute filtered plans based on toggles
   const filteredPlans = useMemo(() => {
     let list = items;
     if (filterByDate) {

@@ -17,7 +17,6 @@ export default function PlanDetailsScreen() {
   const { items: allDays, status, error } = useSelector((state) => state.days);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Recarrega os dias sempre que o ecrã recebe foco ou quando o planId muda
   useFocusEffect(
     React.useCallback(() => {
       if (planId) {
@@ -26,7 +25,6 @@ export default function PlanDetailsScreen() {
     }, [dispatch, planId])
   );
 
-  // Filtro para garantir que apenas os dias do plano atual são mostrados
   const filteredDays = useMemo(() => {
     if (!planId || !allDays || allDays.length === 0) {
       return [];
@@ -45,7 +43,6 @@ export default function PlanDetailsScreen() {
       const routineStr = String(routineIdValue);
       return routineNum === planIdNum || routineStr === planIdStr;
     });
-    // Sort by weekday ascending (1..7)
     return onlyThisPlan.slice().sort((a, b) => {
       const aDayArr = Array.isArray(a?.day) ? a.day : [];
       const bDayArr = Array.isArray(b?.day) ? b.day : [];
@@ -61,7 +58,6 @@ export default function PlanDetailsScreen() {
 
   const handleCloseModal = () => {
     setModalVisible(false);
-    // Recarregar os dias após fechar o modal (caso tenha criado um dia)
     if (planId) {
       dispatch(fetchDays(planId));
     }
@@ -70,7 +66,6 @@ export default function PlanDetailsScreen() {
   const handleDeleteDay = async (day) => {
     if (!day || !day.id) return;
     await dispatch(deleteDay(day.id));
-    // Não fazemos refetch aqui para evitar mostrar loading; a lista é atualizada via reducer
   };
 
   const renderItem = ({ item }) => (

@@ -30,11 +30,9 @@ export default function ExercisesScreen() {
   const [exerciseToEdit, setExerciseToEdit] = useState(null);
 
   useEffect(() => {
-    // Carregar primeira página apenas se ainda não houver dados
     if (!exercises || exercises.length === 0) {
       dispatch(fetchExercises({ limit: 50, offset: 0 }));
     }
-    // Carregar categorias apenas uma vez
     if (!categories || categories.length === 0) {
       dispatch(fetchExerciseCategories());
     }
@@ -55,7 +53,7 @@ export default function ExercisesScreen() {
 
   const handleEditExercise = (exercise) => {
     setExerciseToEdit(exercise);
-    setSelectedExercise(null); // Fechar modal de detalhes
+    setSelectedExercise(null);
     setEditModalVisible(true);
   };
 
