@@ -1,13 +1,24 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const META_STORAGE_KEY = 'setsMeta';
 
 export const fetchSets = createAsyncThunk(
   'sets/fetchSets',
-  async (dayId, { rejectWithValue, getState }) => {
+  async (dayId, { rejectWithValue }) => {
     try {
       const response = await api.get(`slot/?day=${dayId}`);
       const slots = response.data.results || [];
-      const meta = (getState()?.sets?.meta) || {};
+
+      // Load persisted meta from storage
+      let persistedMeta = {};
+      try {
+        const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
+        if (raw) persistedMeta = JSON.parse(raw);
+      } catch (e) {
+        persistedMeta = {};
+      }
 
       const slotsWithDetails = await Promise.all(
         slots.map(async (slot) => {
@@ -16,7 +27,7 @@ export const fetchSets = createAsyncThunk(
             const entries = entryResponse.data.results || [];
 
             const normalizedEntries = entries.map((entry) => {
-              const local = meta[entry.id] || {};
+              const local = persistedMeta[entry.id] || {};
               const reps = typeof local.reps === 'number' ? local.reps : 0;
               const sets = typeof local.sets === 'number' ? local.sets : 0;
               return { ...entry, reps, sets };
@@ -41,7 +52,7 @@ export const fetchSets = createAsyncThunk(
 
 export const addSet = createAsyncThunk(
   'sets/addSet',
-  async ({ dayId, exerciseId, order, reps, sets }, { rejectWithValue }) => {
+  async ({ dayId, exerciseId, order, reps, sets }, { rejectWithValue, getState }) => {
     try {
       const slotResponse = await api.post('slot/', {
         day: parseInt(dayId, 10),
@@ -65,6 +76,16 @@ export const addSet = createAsyncThunk(
       const desiredSets = sets !== undefined && sets !== null ? Math.max(0, parseInt(sets, 10)) : 0;
       const desiredReps = reps !== undefined && reps !== null ? Math.max(0, parseInt(reps, 10)) : 0;
 
+      // Persist meta
+      try {
+        const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
+        const meta = raw ? JSON.parse(raw) : {};
+        meta[entry.id] = { reps: desiredReps, sets: desiredSets };
+        await AsyncStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+      } catch (e) {
+        // ignore
+      }
+
       return {
         slot: createdSlot,
         entry: { ...entry, reps: desiredReps, sets: desiredSets },
@@ -87,11 +108,24 @@ export const updateEntryDetails = createAsyncThunk(
           const r = await api.patch(`slot-entry/${entryId}/`, { comment });
           updated = r.data;
         } catch (e) {
+          // ignore comment failure to keep UX responsive
         }
       }
 
       const desiredSets = sets !== undefined && sets !== null ? Math.max(0, parseInt(sets, 10)) : undefined;
       const desiredReps = reps !== undefined && reps !== null ? Math.max(0, parseInt(reps, 10)) : undefined;
+
+      // Persist meta
+      try {
+        const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
+        const meta = raw ? JSON.parse(raw) : {};
+        if (!meta[entryId]) meta[entryId] = {};
+        if (desiredSets !== undefined) meta[entryId].sets = desiredSets;
+        if (desiredReps !== undefined) meta[entryId].reps = desiredReps;
+        await AsyncStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+      } catch (e) {
+        // ignore
+      }
 
       return {
         entryId,
@@ -113,6 +147,31 @@ export const updateEntryDetails = createAsyncThunk(
   }
 );
 
+// Delete a slot (remove exercise from day) and clean meta
+export const deleteSlot = createAsyncThunk(
+  'sets/deleteSlot',
+  async ({ slotId, entryId }, { rejectWithValue }) => {
+    try {
+      if (!slotId) return rejectWithValue('slotId é obrigatório');
+      await api.delete(`slot/${slotId}/`);
+
+      // Clean meta
+      try {
+        const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
+        const meta = raw ? JSON.parse(raw) : {};
+        if (entryId && meta[entryId]) {
+          delete meta[entryId];
+          await AsyncStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+        }
+      } catch (e) {}
+
+      return { slotId, entryId };
+    } catch (err) {
+      return rejectWithValue(err.response?.data || 'Erro ao remover exercício');
+    }
+  }
+);
+
 const setsSlice = createSlice({
   name: 'sets',
   initialState: { items: [], status: 'idle', error: null, meta: {} },
@@ -120,6 +179,7 @@ const setsSlice = createSlice({
     clearSets: (state) => {
       state.items = [];
       state.status = 'idle';
+      // Keep meta to survive navigation within app; it's persisted to storage
     }
   },
   extraReducers: (builder) => {
@@ -131,8 +191,9 @@ const setsSlice = createSlice({
         state.status = 'succeeded';
         state.items = action.payload;
       })
-      .addCase(fetchSets.rejected, (state) => {
+      .addCase(fetchSets.rejected, (state, action) => {
         state.status = 'failed';
+        state.error = action.payload;
       })
       .addCase(addSet.fulfilled, (state, action) => {
         const { slot, entry } = action.payload || {};
@@ -158,6 +219,13 @@ const setsSlice = createSlice({
         if (!state.meta[entryId]) state.meta[entryId] = {};
         if (meta?.reps !== undefined) state.meta[entryId].reps = meta.reps;
         if (meta?.sets !== undefined) state.meta[entryId].sets = meta.sets;
+      })
+      .addCase(deleteSlot.fulfilled, (state, action) => {
+        const { slotId, entryId } = action.payload || {};
+        state.items = state.items.filter((s) => s && s.id !== slotId);
+        if (entryId && state.meta[entryId]) {
+          delete state.meta[entryId];
+        }
       });
   },
 });

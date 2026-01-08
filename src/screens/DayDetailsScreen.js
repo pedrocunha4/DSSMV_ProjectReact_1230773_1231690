@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchSets, clearSets } from '../store/setsSlice';
+import { fetchSets, clearSets, deleteSlot } from '../store/setsSlice';
 import { fetchExercises } from '../store/exercisesSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import EditEntryModal from '../components/plans/EditEntryModal';
@@ -55,7 +55,28 @@ export default function DayDetailsScreen() {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => openEdit(item.entry)}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() => openEdit(item.entry)}
+      onLongPress={() => {
+        const name = item.exerciseName || 'este exercício';
+        Alert.alert(
+          'Remover exercício',
+          `Queres remover ${name} deste dia?`,
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+              text: 'Remover', style: 'destructive', onPress: async () => {
+                try {
+                  await dispatch(deleteSlot({ slotId: item.id, entryId: item.entry?.id })).unwrap();
+                } catch (e) {}
+              }
+            }
+          ]
+        );
+      }}
+    >
       <Text style={styles.exName}>{item.exerciseName}</Text>
       {item.setsLabel ? (
         <Text style={styles.meta}>{item.setsLabel}</Text>
