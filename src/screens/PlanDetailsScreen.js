@@ -31,25 +31,27 @@ export default function PlanDetailsScreen() {
     if (!planId || !allDays || allDays.length === 0) {
       return [];
     }
-    
     const planIdNum = Number(planId);
     const planIdStr = String(planId);
-    
-    return allDays.filter(day => {
+    const onlyThisPlan = allDays.filter(day => {
       if (!day) return false;
-      
       const routineId = day.routine || day.training || day.routine_id;
       if (routineId === null || routineId === undefined) return false;
-      
       let routineIdValue = routineId;
       if (typeof routineId === 'object' && routineId !== null) {
         routineIdValue = routineId.id || routineId;
       }
-      
       const routineNum = Number(routineIdValue);
       const routineStr = String(routineIdValue);
-      
       return routineNum === planIdNum || routineStr === planIdStr;
+    });
+    // Sort by weekday ascending (1..7)
+    return onlyThisPlan.slice().sort((a, b) => {
+      const aDayArr = Array.isArray(a?.day) ? a.day : [];
+      const bDayArr = Array.isArray(b?.day) ? b.day : [];
+      const aDay = aDayArr.length > 0 ? Number(aDayArr[0]) : 999;
+      const bDay = bDayArr.length > 0 ? Number(bDayArr[0]) : 999;
+      return aDay - bDay;
     });
   }, [allDays, planId]);
 
