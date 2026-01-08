@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSets, clearSets } from '../store/setsSlice';
-import { fetchExercises } from '../store/exercisesSlice'; // Importa a ação de buscar exercícios
+import { fetchExercises } from '../store/exercisesSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import EditEntryModal from '../components/plans/EditEntryModal';
 
 export default function DayDetailsScreen() {
   const route = useRoute();
@@ -14,39 +15,57 @@ export default function DayDetailsScreen() {
   const { items: slots, status: setsStatus } = useSelector((state) => state.sets);
   const { items: exercises, status: exStatus } = useSelector((state) => state.exercises);
 
+  const [editVisible, setEditVisible] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+
   useEffect(() => {
-    // Carregar os slots do dia
     dispatch(fetchSets(dayId));
 
-    // CORREÇÃO: Se a lista global de exercícios estiver vazia, carrega-os
     if (exercises.length === 0 && exStatus !== 'loading') {
       dispatch(fetchExercises());
     }
 
     return () => dispatch(clearSets());
-  }, [dispatch, dayId]);
+  }, [dispatch, dayId, exercises.length, exStatus]);
 
   const mappedData = useMemo(() => {
     return slots.map(slot => {
       const entry = slot.entries && slot.entries.length > 0 ? slot.entries[0] : null;
 
       if (entry) {
-        // Tenta encontrar o nome no array global de exercícios
         const exerciseDetail = exercises.find(ex => ex.id === entry.exercise);
+        const setsCount = typeof entry.sets === 'number' ? entry.sets : 0;
+        const reps = typeof entry.reps === 'number' ? entry.reps : 0;
+        const comment = typeof entry.comment === 'string' ? entry.comment.trim() : '';
         return {
           id: slot.id,
-          // Se ainda estiver a carregar ou não encontrar, mostra "Carregando..." em vez de "ID: 12"
+          entry,
           exerciseName: exerciseDetail ? exerciseDetail.name : "A carregar nome...",
+          setsLabel: setsCount > 0 && reps > 0 ? `${setsCount} X ${reps}` : null,
+          comment,
         };
       }
       return null;
     }).filter(item => item !== null);
   }, [slots, exercises]);
 
+  const openEdit = (entry) => {
+    setSelectedEntry(entry);
+    setEditVisible(true);
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => openEdit(item.entry)}>
       <Text style={styles.exName}>{item.exerciseName}</Text>
-    </View>
+      {item.setsLabel ? (
+        <Text style={styles.meta}>{item.setsLabel}</Text>
+      ) : (
+        <Text style={styles.metaMuted}>Toca para definir sets e reps</Text>
+      )}
+      {item.comment ? (
+        <Text style={styles.comment} numberOfLines={1} ellipsizeMode="tail">{item.comment}</Text>
+      ) : null}
+    </TouchableOpacity>
   );
 
   return (
@@ -85,6 +104,8 @@ export default function DayDetailsScreen() {
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
+
+      <EditEntryModal visible={editVisible} entry={selectedEntry} onClose={() => setEditVisible(false)} />
     </View>
   );
 }
@@ -98,8 +119,11 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 40 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: 16, paddingBottom: 100 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, marginBottom: 14, elevation: 4 },
-  exName: { fontSize: 18, fontWeight: '700', color: '#1A1A1A' },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 14, elevation: 4 },
+  exName: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', marginBottom: 6 },
+  meta: { fontSize: 14, color: '#111827' },
+  metaMuted: { fontSize: 14, color: '#6B7280' },
+  comment: { fontSize: 13, color: '#6B7280', marginTop: 4 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80 },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
   emptyText: { fontSize: 18, fontWeight: '700', color: '#333333', marginBottom: 8 },
