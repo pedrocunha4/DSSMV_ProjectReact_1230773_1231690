@@ -11,7 +11,6 @@ export const fetchSets = createAsyncThunk(
       const response = await api.get(`slot/?day=${dayId}`);
       const slots = response.data.results || [];
 
-      // Load persisted meta from storage
       let persistedMeta = {};
       try {
         const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
@@ -77,14 +76,12 @@ export const addSet = createAsyncThunk(
       const desiredSets = sets !== undefined && sets !== null ? Math.max(0, parseInt(sets, 10)) : 0;
       const desiredReps = reps !== undefined && reps !== null ? Math.max(0, parseInt(reps, 10)) : 0;
 
-      // Persist meta
       try {
         const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
         const meta = raw ? JSON.parse(raw) : {};
         meta[entry.id] = { reps: desiredReps, sets: desiredSets };
         await AsyncStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
       } catch (e) {
-        // ignore
       }
 
       return {
@@ -109,26 +106,22 @@ export const updateEntryDetails = createAsyncThunk(
           const r = await api.patch(`slot-entry/${entryId}/`, { comment });
           updated = r.data;
         } catch (e) {
-          // ignore comment failure to keep UX responsive
         }
       }
 
       const desiredSets = sets !== undefined && sets !== null ? Math.max(0, parseInt(sets, 10)) : undefined;
       const desiredReps = reps !== undefined && reps !== null ? Math.max(0, parseInt(reps, 10)) : undefined;
 
-      // Persist meta (preserve completed status)
       try {
         const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
         const meta = raw ? JSON.parse(raw) : {};
         if (!meta[entryId]) meta[entryId] = {};
-        // Preserve existing completed status if not being updated
         const existingCompleted = meta[entryId].completed;
         if (desiredSets !== undefined) meta[entryId].sets = desiredSets;
         if (desiredReps !== undefined) meta[entryId].reps = desiredReps;
         if (existingCompleted !== undefined) meta[entryId].completed = existingCompleted;
         await AsyncStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
       } catch (e) {
-        // ignore
       }
 
       return {
@@ -151,14 +144,12 @@ export const updateEntryDetails = createAsyncThunk(
   }
 );
 
-// Toggle exercise completed status
 export const toggleExerciseCompleted = createAsyncThunk(
   'sets/toggleExerciseCompleted',
   async ({ entryId }, { rejectWithValue }) => {
     try {
       if (!entryId) return rejectWithValue('entryId é obrigatório');
 
-      // Get current meta
       let meta = {};
       try {
         const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
@@ -167,16 +158,13 @@ export const toggleExerciseCompleted = createAsyncThunk(
         meta = {};
       }
 
-      // Toggle completed status
       if (!meta[entryId]) meta[entryId] = {};
       const currentCompleted = meta[entryId].completed || false;
       meta[entryId].completed = !currentCompleted;
 
-      // Persist meta
       try {
         await AsyncStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
       } catch (e) {
-        // ignore
       }
 
       return { entryId, completed: !currentCompleted };
@@ -186,7 +174,6 @@ export const toggleExerciseCompleted = createAsyncThunk(
   }
 );
 
-// Delete a slot (remove exercise from day) and clean meta
 export const deleteSlot = createAsyncThunk(
   'sets/deleteSlot',
   async ({ slotId, entryId }, { rejectWithValue }) => {
@@ -194,7 +181,6 @@ export const deleteSlot = createAsyncThunk(
       if (!slotId) return rejectWithValue('slotId é obrigatório');
       await api.delete(`slot/${slotId}/`);
 
-      // Clean meta
       try {
         const raw = await AsyncStorage.getItem(META_STORAGE_KEY);
         const meta = raw ? JSON.parse(raw) : {};
@@ -218,7 +204,6 @@ const setsSlice = createSlice({
     clearSets: (state) => {
       state.items = [];
       state.status = 'idle';
-      // Keep meta to survive navigation within app; it's persisted to storage
     }
   },
   extraReducers: (builder) => {
@@ -248,7 +233,6 @@ const setsSlice = createSlice({
           const idx = slot.entries.findIndex((e) => e.id === entryId);
           if (idx !== -1) {
             const existing = slot.entries[idx];
-            // Preserve completed status when updating other fields
             const existingCompleted = existing.completed;
             slot.entries[idx] = {
               ...existing,
@@ -261,9 +245,7 @@ const setsSlice = createSlice({
         if (!state.meta[entryId]) state.meta[entryId] = {};
         if (meta?.reps !== undefined) state.meta[entryId].reps = meta.reps;
         if (meta?.sets !== undefined) state.meta[entryId].sets = meta.sets;
-        // Preserve completed status in meta
         if (state.meta[entryId].completed === undefined) {
-          // Try to get from entry if available
           const slot = state.items.find(s => s?.entries?.some(e => e.id === entryId));
           if (slot) {
             const foundEntry = slot.entries.find(e => e.id === entryId);
@@ -276,8 +258,7 @@ const setsSlice = createSlice({
       .addCase(toggleExerciseCompleted.fulfilled, (state, action) => {
         const { entryId, completed } = action.payload || {};
         if (!entryId) return;
-        
-        // Update entry in items
+
         for (const slot of state.items) {
           if (!slot?.entries) continue;
           const idx = slot.entries.findIndex((e) => e.id === entryId);
@@ -289,8 +270,7 @@ const setsSlice = createSlice({
             break;
           }
         }
-        
-        // Update meta
+
         if (!state.meta[entryId]) state.meta[entryId] = {};
         state.meta[entryId].completed = completed;
       })

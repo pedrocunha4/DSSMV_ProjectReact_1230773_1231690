@@ -25,17 +25,16 @@ export default function ExerciseSelectScreen() {
   const handleSelect = async (exercise) => {
     setAdding(true);
     try {
-      // Calcular a ordem do próximo exercício
       const nextOrder = sets.length + 1;
-      
-      const result = await dispatch(addSet({ 
-        dayId, 
-        exerciseId: exercise.id, 
-        sets: 3, 
+
+      const result = await dispatch(addSet({
+        dayId,
+        exerciseId: exercise.id,
+        sets: 3,
         reps: 10,
         order: nextOrder
       }));
-      
+
       if (addSet.fulfilled.match(result)) {
         Alert.alert("Sucesso", `${exercise.name} adicionado!`);
         navigation.goBack();
@@ -51,12 +50,12 @@ export default function ExerciseSelectScreen() {
 
   const renderItem = ({ item }) => {
     if (!item || !item.name) return null;
-    
+
     const categoryColor = getCategoryColor(item.category_name);
-    
+
     return (
-      <TouchableOpacity 
-        style={styles.card} 
+      <TouchableOpacity
+        style={styles.card}
         onPress={() => handleSelect(item)}
         activeOpacity={0.8}
         disabled={adding}

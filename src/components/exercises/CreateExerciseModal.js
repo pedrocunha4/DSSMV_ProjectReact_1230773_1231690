@@ -20,14 +20,12 @@ export default function CreateExerciseModal({ visible, categories, onClose, exer
   const [newExerciseCategory, setNewExerciseCategory] = useState(null);
   const [showCreateCategoryDropdown, setShowCreateCategoryDropdown] = useState(false);
 
-  // Preencher campos quando estiver editando
   useEffect(() => {
     if (exercise && visible) {
       setNewExerciseName(exercise.name || '');
       setNewExerciseDescription(exercise.description || '');
       setNewExerciseCategory(exercise.category || null);
     } else if (!visible) {
-      // Limpar campos quando fechar
       setNewExerciseName('');
       setNewExerciseDescription('');
       setNewExerciseCategory(null);
@@ -56,14 +54,13 @@ export default function CreateExerciseModal({ visible, categories, onClose, exer
 
     try {
       if (isEditing) {
-        // Atualizar exercício existente
         const exerciseData = {
           exerciseId: exercise.id,
           name: newExerciseName.trim(),
           categoryId: newExerciseCategory,
           description: newExerciseDescription.trim(),
         };
-        
+
         const result = await dispatch(updateExercise(exerciseData));
 
         if (updateExercise.fulfilled.match(result)) {
@@ -87,13 +84,12 @@ export default function CreateExerciseModal({ visible, categories, onClose, exer
           Alert.alert('Erro', errorMessage);
         }
       } else {
-        // Criar novo exercício
         const exerciseData = {
           name: newExerciseName.trim(),
           categoryId: newExerciseCategory,
           description: newExerciseDescription.trim(),
         };
-        
+
         const result = await dispatch(addExercise(exerciseData));
 
         if (addExercise.fulfilled.match(result)) {
@@ -130,7 +126,7 @@ export default function CreateExerciseModal({ visible, categories, onClose, exer
       onRequestClose={handleClose}
     >
       <View style={styles.modalOverlay}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlayTouchable}
           activeOpacity={1}
           onPress={handleClose}
@@ -177,7 +173,7 @@ export default function CreateExerciseModal({ visible, categories, onClose, exer
                 !newExerciseCategory && styles.categorySelectorPlaceholder
               ]}>
                 {newExerciseCategory
-                  ? categories.find(cat => cat.id === newExerciseCategory)?.name_pt || 
+                  ? categories.find(cat => cat.id === newExerciseCategory)?.name_pt ||
                     categories.find(cat => cat.id === newExerciseCategory)?.name ||
                     'Selecione uma categoria'
                   : 'Selecione uma categoria'}

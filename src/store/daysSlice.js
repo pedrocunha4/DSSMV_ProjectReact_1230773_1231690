@@ -1,15 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../services/api';
 
-// GET: Buscar Dias com paginação manual (a API ignora alguns filtros e é paginada)
 export const fetchDays = createAsyncThunk(
   'days/fetchDays',
   async (planId, { rejectWithValue }) => {
     try {
-      // A API é paginada e o filtro por routine nem sempre funciona corretamente.
-      // Por isso:
-      // 1. Buscamos TODAS as páginas
-      // 2. Filtramos por routine === planId no cliente
       let url = `day/?limit=50`;
       let allResults = [];
 
@@ -21,7 +16,6 @@ export const fetchDays = createAsyncThunk(
         url = data.next || null;
       }
 
-      // Filtrar no cliente apenas os dias deste plano de treino
       const planIdNum = Number(planId);
       const planIdStr = String(planId);
 
@@ -43,15 +37,14 @@ export const fetchDays = createAsyncThunk(
   }
 );
 
-// POST: Criar Dia
 export const addDay = createAsyncThunk(
   'days/addDay',
   async ({ planId, description, selectedDays }, { rejectWithValue }) => {
     try {
       const payload = {
-        routine: planId, // Obrigatório ser 'routine'
+        routine: planId,
         description: description,
-        day: selectedDays // Array de dias da semana: [1, 3, 5] = Segunda, Quarta, Sexta
+        day: selectedDays
       };
       const response = await api.post('day/', payload);
       return response.data;
@@ -61,7 +54,6 @@ export const addDay = createAsyncThunk(
   }
 );
 
-// DELETE: Eliminar Dia
 export const deleteDay = createAsyncThunk(
   'days/deleteDay',
   async (dayId, { rejectWithValue }) => {
@@ -79,7 +71,6 @@ const daysSlice = createSlice({
   name: 'days',
   initialState: { items: [], status: 'idle', error: null },
   reducers: {
-    // Ação para limpar a lista quando saímos do ecrã
     clearDays: (state) => {
       state.items = [];
       state.status = 'idle';
@@ -100,7 +91,6 @@ const daysSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(addDay.fulfilled, (state, action) => {
-        // Adiciona o novo dia ao INÍCIO da lista
         state.items.unshift(action.payload);
       })
       .addCase(deleteDay.fulfilled, (state, action) => {

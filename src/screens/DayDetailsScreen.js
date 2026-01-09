@@ -60,7 +60,6 @@ export default function DayDetailsScreen() {
     try {
       await dispatch(toggleExerciseCompleted({ entryId })).unwrap();
     } catch (e) {
-      // ignore errors
     }
   };
 

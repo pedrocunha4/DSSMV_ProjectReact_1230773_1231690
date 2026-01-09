@@ -23,7 +23,6 @@ export default function EditPlanModal({
   const [editStart, setEditStart] = React.useState('');
   const [editEnd, setEditEnd] = React.useState('');
 
-  // Preencher campos quando o plano mudar
   React.useEffect(() => {
     if (plan && visible) {
       setEditName(plan.name || '');
@@ -31,7 +30,6 @@ export default function EditPlanModal({
       setEditStart(plan.start || plan.start_date || '');
       setEditEnd(plan.end || plan.end_date || '');
     } else if (!visible) {
-      // Limpar campos quando fechar
       setEditName('');
       setEditDesc('');
       setEditStart('');
@@ -135,42 +133,42 @@ export default function EditPlanModal({
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.5)', 
-    justifyContent: 'center', 
-    padding: 20 
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 20
   },
-  modalContent: { 
-    backgroundColor: '#FFF', 
-    borderRadius: 15, 
-    padding: 20, 
-    maxHeight: '90%' 
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    padding: 20,
+    maxHeight: '90%'
   },
-  modalTitle: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    marginBottom: 15, 
-    textAlign: 'center' 
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center'
   },
-  label: { 
-    fontSize: 14, 
-    fontWeight: 'bold', 
-    color: '#333', 
-    marginBottom: 5, 
-    marginTop: 10 
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+    marginTop: 10
   },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#DDD', 
-    borderRadius: 8, 
-    padding: 12, 
-    backgroundColor: '#FAFAFA' 
+  input: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#FAFAFA'
   },
-  objectiveContainer: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    marginBottom: 5 
+  objectiveContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5
   },
   objectiveBtn: {
     flex: 1,
@@ -187,26 +185,26 @@ const styles = StyleSheet.create({
     borderColor: '#007AFF',
     borderWidth: 2
   },
-  objectiveText: { 
-    color: '#666' 
+  objectiveText: {
+    color: '#666'
   },
-  objectiveTextSelected: { 
-    color: '#007AFF', 
-    fontWeight: 'bold' 
+  objectiveTextSelected: {
+    color: '#007AFF',
+    fontWeight: 'bold'
   },
-  modalButtons: { 
-    flexDirection: 'row', 
-    justifyContent: 'flex-end', 
-    marginTop: 20 
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 20
   },
-  cancelBtn: { 
-    padding: 10, 
-    marginRight: 10 
+  cancelBtn: {
+    padding: 10,
+    marginRight: 10
   },
-  saveBtn: { 
-    backgroundColor: '#007AFF', 
-    padding: 10, 
-    borderRadius: 8 
+  saveBtn: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 8
   }
 });
 
