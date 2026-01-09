@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchSets, clearSets, deleteSlot } from '../store/setsSlice';
+import { fetchSets, clearSets, deleteSlot, toggleExerciseCompleted } from '../store/setsSlice';
 import { fetchExercises } from '../store/exercisesSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import EditEntryModal from '../components/plans/EditEntryModal';
@@ -37,12 +37,14 @@ export default function DayDetailsScreen() {
         const setsCount = typeof entry.sets === 'number' ? entry.sets : 0;
         const reps = typeof entry.reps === 'number' ? entry.reps : 0;
         const comment = typeof entry.comment === 'string' ? entry.comment.trim() : '';
+        const completed = typeof entry.completed === 'boolean' ? entry.completed : false;
         return {
           id: slot.id,
           entry,
           exerciseName: exerciseDetail ? exerciseDetail.name : "A carregar nome...",
           setsLabel: setsCount > 0 && reps > 0 ? `${setsCount} X ${reps}` : null,
           comment,
+          completed,
         };
       }
       return null;
@@ -54,9 +56,17 @@ export default function DayDetailsScreen() {
     setEditVisible(true);
   };
 
+  const handleToggleCompleted = async (entryId) => {
+    try {
+      await dispatch(toggleExerciseCompleted({ entryId })).unwrap();
+    } catch (e) {
+      // ignore errors
+    }
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, item.completed && styles.cardCompleted]}
       activeOpacity={0.8}
       onPress={() => openEdit(item.entry)}
       onLongPress={() => {
@@ -77,15 +87,31 @@ export default function DayDetailsScreen() {
         );
       }}
     >
-      <Text style={styles.exName}>{item.exerciseName}</Text>
-      {item.setsLabel ? (
-        <Text style={styles.meta}>{item.setsLabel}</Text>
-      ) : (
-        <Text style={styles.metaMuted}>Toca para definir sets e reps</Text>
-      )}
-      {item.comment ? (
-        <Text style={styles.comment} numberOfLines={1} ellipsizeMode="tail">{item.comment}</Text>
-      ) : null}
+      <View style={styles.cardContent}>
+        <View style={styles.cardLeft}>
+          <Text style={[styles.exName, item.completed && styles.exNameCompleted]}>{item.exerciseName}</Text>
+          {item.setsLabel ? (
+            <Text style={[styles.meta, item.completed && styles.metaCompleted]}>{item.setsLabel}</Text>
+          ) : (
+            <Text style={styles.metaMuted}>Toca para definir sets e reps</Text>
+          )}
+          {item.comment ? (
+            <Text style={styles.comment} numberOfLines={1} ellipsizeMode="tail">{item.comment}</Text>
+          ) : null}
+        </View>
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleToggleCompleted(item.entry?.id);
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, item.completed && styles.checkboxChecked]}>
+            {item.completed && <Text style={styles.checkmark}>✓</Text>}
+          </View>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
@@ -141,10 +167,19 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: 16, paddingBottom: 100 },
   card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 14, elevation: 4 },
+  cardCompleted: { backgroundColor: '#F0F9FF', opacity: 0.9 },
+  cardContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cardLeft: { flex: 1, marginRight: 12 },
   exName: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', marginBottom: 6 },
+  exNameCompleted: { textDecorationLine: 'line-through', color: '#6B7280' },
   meta: { fontSize: 14, color: '#111827' },
+  metaCompleted: { color: '#6B7280' },
   metaMuted: { fontSize: 14, color: '#6B7280' },
   comment: { fontSize: 13, color: '#6B7280', marginTop: 4 },
+  checkboxContainer: { padding: 4 },
+  checkbox: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: '#007AFF', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  checkboxChecked: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  checkmark: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80 },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
   emptyText: { fontSize: 18, fontWeight: '700', color: '#333333', marginBottom: 8 },
