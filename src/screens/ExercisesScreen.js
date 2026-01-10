@@ -36,7 +36,7 @@ export default function ExercisesScreen() {
     if (!categories || categories.length === 0) {
       dispatch(fetchExerciseCategories());
     }
-  }, [dispatch]);
+  }, [categories, dispatch, exercises]);
 
   const handleClearFilters = () => {
     setSearch('');

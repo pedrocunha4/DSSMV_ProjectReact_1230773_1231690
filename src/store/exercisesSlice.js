@@ -28,7 +28,6 @@ const categoryTranslations = {
   'Hamstrings': 'Posteriores da coxa',
   'Quadriceps': 'Quadríceps',
 };
-
 export const fetchExerciseCategories = createAsyncThunk(
   'exercises/fetchCategories',
   async (_, { rejectWithValue }) => {
@@ -282,7 +281,6 @@ export const fetchExercises = createAsyncThunk(
     try {
       const limit = typeof params.limit === 'number' ? params.limit : 100;
       const offset = typeof params.offset === 'number' ? params.offset : 0;
-
       const response = await api.get('exerciseinfo/', {
         params: {
           limit,

@@ -30,8 +30,8 @@ export default function ExerciseSelectScreen() {
       const result = await dispatch(addSet({
         dayId,
         exerciseId: exercise.id,
-        sets: 3,
-        reps: 10,
+        sets: 0,
+        reps: 0,
         order: nextOrder
       }));
 

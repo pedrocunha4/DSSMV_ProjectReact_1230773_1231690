@@ -26,30 +26,59 @@ export default function PlanDetailsScreen() {
   );
 
   const filteredDays = useMemo(() => {
-    if (!planId || !allDays || allDays.length === 0) {
-      return [];
-    }
+    if (!planId || !allDays || allDays.length === 0) return [];
+
     const planIdNum = Number(planId);
     const planIdStr = String(planId);
+
     const onlyThisPlan = allDays.filter(day => {
       if (!day) return false;
       const routineId = day.routine || day.training || day.routine_id;
       if (routineId === null || routineId === undefined) return false;
+
       let routineIdValue = routineId;
       if (typeof routineId === 'object' && routineId !== null) {
         routineIdValue = routineId.id || routineId;
       }
-      const routineNum = Number(routineIdValue);
-      const routineStr = String(routineIdValue);
-      return routineNum === planIdNum || routineStr === planIdStr;
+      return Number(routineIdValue) === planIdNum || String(routineIdValue) === planIdStr;
     });
-    return onlyThisPlan.slice().sort((a, b) => {
-      const aDayArr = Array.isArray(a?.day) ? a.day : [];
-      const bDayArr = Array.isArray(b?.day) ? b.day : [];
-      const aDay = aDayArr.length > 0 ? Number(aDayArr[0]) : 999;
-      const bDay = bDayArr.length > 0 ? Number(bDayArr[0]) : 999;
-      return aDay - bDay;
+
+    const DAY_MAP = {
+      'segunda': 1,
+      'terça': 2, 'terca': 2,
+      'quarta': 3,
+      'quinta': 4,
+      'sexta': 5,
+      'sábado': 6, 'sabado': 6,
+      'domingo': 7
+    };
+
+    const getDayNumber = (item) => {
+      if (!item) return 999;
+
+      let val = item.day;
+      if (Array.isArray(val) && val.length > 0) return Number(val[0]);
+      if (typeof val === 'number') return val;
+
+      if (item.description && typeof item.description === 'string') {
+        const descLower = item.description.toLowerCase();
+
+        for (const [name, num] of Object.entries(DAY_MAP)) {
+          if (descLower.includes(name)) {
+            return num;
+          }
+        }
+      }
+
+      return 999;
+    };
+
+    return [...onlyThisPlan].sort((a, b) => {
+      const valA = getDayNumber(a);
+      const valB = getDayNumber(b);
+      return valA - valB;
     });
+
   }, [allDays, planId]);
 
   const handleOpenModal = () => {
