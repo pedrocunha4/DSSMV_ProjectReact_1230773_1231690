@@ -56,6 +56,34 @@ export default function DayDetailsScreen() {
     setEditVisible(true);
   };
 
+  const handleRemoveExercise = (item) => {
+    const name = item.exerciseName || 'este exercício';
+
+    Alert.alert(
+      'Remover exercício',
+      `Queres remover ${name} deste dia?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(deleteSlot({
+                slotId: item.id,
+                entryId: item.entry?.id
+              })).unwrap();
+            } catch (e) {
+              console.log("Erro ao apagar", e);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+
+
   const handleToggleCompleted = async (entryId) => {
     try {
       await dispatch(toggleExerciseCompleted({ entryId })).unwrap();
@@ -68,23 +96,7 @@ export default function DayDetailsScreen() {
       style={[styles.card, item.completed && styles.cardCompleted]}
       activeOpacity={0.8}
       onPress={() => openEdit(item.entry)}
-      onLongPress={() => {
-        const name = item.exerciseName || 'este exercício';
-        Alert.alert(
-          'Remover exercício',
-          `Queres remover ${name} deste dia?`,
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-              text: 'Remover', style: 'destructive', onPress: async () => {
-                try {
-                  await dispatch(deleteSlot({ slotId: item.id, entryId: item.entry?.id })).unwrap();
-                } catch (e) {}
-              }
-            }
-          ]
-        );
-      }}
+      onLongPress={() => handleRemoveExercise(item)}
     >
       <View style={styles.cardContent}>
         <View style={styles.cardLeft}>
